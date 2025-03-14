@@ -51,6 +51,7 @@ android {
     
     kotlinOptions {
         jvmTarget = "17"
+        freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
     }
     
     buildFeatures {
@@ -82,7 +83,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    // 添加基础Material依赖
+    implementation("androidx.compose.material:material:1.6.0")
+    // 确保添加Material图标扩展库
+    implementation("androidx.compose.material:material-icons-core:1.6.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    // 添加动画支持
+    implementation("androidx.compose.animation:animation:1.6.0")
+    implementation("androidx.compose.animation:animation-core:1.6.0")
+    // 添加SavedInstanceState支持
+    implementation("androidx.compose.runtime:runtime-saveable:1.6.0")
     implementation(libs.vision.internal.vkp)
+    // 添加正确的手势处理和布局依赖
+    implementation("androidx.compose.foundation:foundation:1.6.0")
+    implementation("androidx.compose.foundation:foundation-layout:1.6.0")
+    implementation("androidx.compose.ui:ui-util:1.6.0")
+    // 添加NumberPicker组件（通常需要第三方库）
+    implementation("io.github.vanpra.compose-material-dialogs:datetime:0.8.1-rc")
     debugImplementation(libs.androidx.compose.ui.tooling)
     
     // Lifecycle组件
@@ -129,6 +146,4 @@ dependencies {
     
     // 调试工具
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-    implementation("androidx.compose.material:material-icons-extended:1.6.0")
 }
