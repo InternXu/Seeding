@@ -134,10 +134,14 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.collectAsState
+import com.example.seeding.presentation.viewmodel.TargetViewModel
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.focus.FocusRequester
 
 // 使用自定义NumberPicker组件
 // 模拟目标数据 - 定义为顶层变量以便不同的组合函数可以访问
-val mockTargets = mutableStateListOf<TargetItem>()
+// val mockTargets = mutableStateListOf<TargetItem>()
 
 // 种子类型列表
 val seedTypes = listOf(
@@ -158,7 +162,7 @@ val seedTypes = listOf(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SeedingApp() {
+fun SeedingApp(targetViewModel: TargetViewModel) {
     // 使用rememberSaveable保存状态，以便屏幕旋转后保留
     var selectedItem by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(0) }
     var drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -328,7 +332,7 @@ fun SeedingApp() {
             ) {
                 when (selectedItem) {
                     0 -> SowingScreen()
-                    1 -> TargetScreen(isEditMode = isEditMode)
+                    1 -> TargetScreen(isEditMode = isEditMode, targetViewModel = targetViewModel)
                     2 -> HarvestScreen()
                 }
             }
@@ -340,9 +344,18 @@ fun SeedingApp() {
         AddTargetDialog(
             onDismiss = { showAddTargetDialog = false },
             onAdd = { newTarget ->
-                mockTargets.add(newTarget)
-                showAddTargetDialog = false
-            }
+                val added = targetViewModel.addTarget(
+                    title = newTarget.title,
+                    description = newTarget.description,
+                    deadline = newTarget.deadline,
+                    seedType = newTarget.seedType
+                )
+                // 只有在成功添加的情况下才关闭对话框
+                if (added) {
+                    showAddTargetDialog = false
+                }
+            },
+            targetViewModel = targetViewModel
         )
     }
 }
@@ -366,57 +379,15 @@ fun SowingScreen() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TargetScreen(
-    isEditMode: Boolean
+    isEditMode: Boolean,
+    targetViewModel: TargetViewModel
 ) {
-    // 如果列表为空，添加一些模拟数据
-    if (mockTargets.isEmpty()) {
-        mockTargets.addAll(
-            listOf(
-                TargetItem(
-                    id = UUID.randomUUID().toString(),
-                    title = "完成Seeding应用开发",
-                    description = "实现所有基本功能并发布第一个版本",
-                    deadline = "2023-12-31",
-                    progress = 25,
-                    status = "进行中",
-                    seedType = 0,
-                    orderIndex = 0
-                ),
-                TargetItem(
-                    id = UUID.randomUUID().toString(),
-                    title = "学习Jetpack Compose",
-                    description = "掌握Compose的基本使用和高级特性",
-                    deadline = "2023-11-15",
-                    progress = 80,
-                    status = "进行中",
-                    seedType = 1,
-                    orderIndex = 1
-                ),
-                TargetItem(
-                    id = UUID.randomUUID().toString(),
-                    title = "读完《深入理解Kotlin协程》",
-                    description = "理解协程的原理和使用场景",
-                    deadline = "2023-10-30",
-                    progress = 100,
-                    status = "已完成",
-                    seedType = 2,
-                    orderIndex = 2
-                ),
-                TargetItem(
-                    id = UUID.randomUUID().toString(),
-                    title = "每周跑步20公里",
-                    description = "坚持锻炼，增强体质",
-                    deadline = "2023-10-15",
-                    progress = 60,
-                    status = "已放弃",
-                    seedType = 3,
-                    orderIndex = 3
-                )
-            )
-        )
-    }
-    
-    var selectedCategory by remember { mutableStateOf("全部") }
+    // 从ViewModel收集状态
+    val activeTargets = targetViewModel.activeTargets.collectAsState().value
+    val completedTargets = targetViewModel.completedTargets.collectAsState().value
+    val abandonedTargets = targetViewModel.abandonedTargets.collectAsState().value
+    val deletedTargets = targetViewModel.deletedTargets.collectAsState().value
+    val activeSeeds = targetViewModel.activeSeeds.collectAsState().value
     
     // 处理目标查看和编辑
     var selectedTarget by remember { mutableStateOf<TargetItem?>(null) }
@@ -427,16 +398,12 @@ fun TargetScreen(
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var isPermanentDelete by remember { mutableStateOf(false) }
     
+    // 处理恢复失败提示
+    var showRestoreErrorDialog by remember { mutableStateOf(false) }
+    var targetToRestore by remember { mutableStateOf<TargetItem?>(null) }
+    
     // 目标添加对话框
     var showAddTargetDialog by remember { mutableStateOf(false) }
-    
-    // 获取所有活跃种子类型（从进行中的目标中提取）
-    val activeSeeds = remember(mockTargets.size, mockTargets.map { it.seedType to it.isDeleted }) {
-        mockTargets
-            .filter { it.status == "进行中" && !it.isDeleted }
-            .map { it.seedType }
-            .distinct()
-    }
     
     // 构建类别列表：全部 + 活跃种子类型 + 已完成 + 已放弃 + 已删除
     val categories = remember(activeSeeds) {
@@ -458,6 +425,8 @@ fun TargetScreen(
         } + 
         listOf("已完成", "已放弃", "已删除")
     }
+    
+    var selectedCategory by remember { mutableStateOf("全部") }
     
     // 如果当前选中的类别不再存在于categories中，重置为"全部"
     if (!categories.contains(selectedCategory) && selectedCategory != "全部" && 
@@ -486,10 +455,10 @@ fun TargetScreen(
         
         // 显示目标列表
         val filteredTargets = when(selectedCategory) {
-            "全部" -> mockTargets.filter { it.status == "进行中" && !it.isDeleted }
-            "已完成" -> mockTargets.filter { it.status == "已完成" && !it.isDeleted }
-            "已放弃" -> mockTargets.filter { it.status == "已放弃" && !it.isDeleted }
-            "已删除" -> mockTargets.filter { it.isDeleted }
+            "全部" -> activeTargets
+            "已完成" -> completedTargets
+            "已放弃" -> abandonedTargets
+            "已删除" -> deletedTargets
             else -> {
                 // 处理种子类型筛选
                 val seedIndex = seedTypes.indexOfFirst { seedType ->
@@ -508,7 +477,7 @@ fun TargetScreen(
                 }
                 
                 if (seedIndex >= 0) {
-                    mockTargets.filter { it.seedType == seedIndex && it.status == "进行中" && !it.isDeleted }
+                    activeTargets.filter { it.seedType == seedIndex }
                 } else {
                     emptyList()
                 }
@@ -516,7 +485,7 @@ fun TargetScreen(
         }
         
         // 按orderIndex排序
-        val sortedTargets = remember(filteredTargets, mockTargets) {
+        val sortedTargets = remember(filteredTargets) {
             filteredTargets.sortedBy { it.orderIndex }
         }
         
@@ -536,25 +505,63 @@ fun TargetScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "暂无${selectedCategory}目标",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.Gray
-                        )
-                        
-                        // 只在非"已删除"视图中显示添加按钮
-                        if (selectedCategory != "已删除") {
+                        // 如果是"已删除"标签并且为空，显示不同提示
+                        if (selectedCategory == "已删除") {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = Color.Gray.copy(alpha = 0.5f),
+                                modifier = Modifier.size(80.dp)
+                            )
                             Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { showAddTargetDialog = true }
+                            Text(
+                                text = "暂无已删除目标",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Gray.copy(alpha = 0.7f)
+                            )
+                        } else {
+                            // 不同类别的空状态提示
+                            val emptyStateText = when(selectedCategory) {
+                                "全部" -> "还没有目标呢！"
+                                "已完成" -> "暂无已完成目标"
+                                "已放弃" -> "暂无已放弃目标"
+                                else -> "暂无${selectedCategory}类型的目标"
+                            }
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = emptyStateText,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = Color.Gray.copy(alpha = 0.7f),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            // 添加操作提示，半透明样式
+                            Text(
+                                text = "点击右下角的 + 按钮添加新目标",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            // 显示箭头指向右下角
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(bottom = 64.dp, end = 64.dp),
+                                contentAlignment = Alignment.BottomEnd
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "添加目标",
-                                    modifier = Modifier.size(20.dp)
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .rotate(315f) // 旋转45度指向右下角
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("添加新目标")
                             }
                         }
                     }
@@ -618,9 +625,13 @@ fun TargetScreen(
                                     }
                                 },
                                 onRestoreClick = {
-                                    val targetIndex = mockTargets.indexOfFirst { it.id == target.id }
-                                    if (targetIndex >= 0) {
-                                        mockTargets[targetIndex] = target.copy(isDeleted = false)
+                                    // 尝试恢复目标，并检查是否成功（是否有标题冲突）
+                                    val restored = targetViewModel.restoreTarget(target.id)
+                                    if (!restored) {
+                                        // 如果恢复失败（可能是标题冲突），显示提示
+                                        // 这里简单处理，可以后续添加一个Toast或Dialog提示用户
+                                        showRestoreErrorDialog = true
+                                        targetToRestore = target
                                     }
                                 },
                                 showRestoreOption = selectedCategory == "已删除",
@@ -629,52 +640,16 @@ fun TargetScreen(
                                 enableMoveDown = isEditMode && selectedCategory != "已删除" && index < sortedTargets.size - 1,
                                 onMoveUp = {
                                     if (index > 0) {
-                                        // 重写排序逻辑 - 直接交换当前显示的两个项目的顺序
-                                        val currentItem = sortedTargets[index]
-                                        val prevItem = sortedTargets[index - 1]
-                                        
-                                        // 1. 重新生成连续的索引值
-                                        val sortedIndices = sortedTargets.mapIndexed { i, item -> 
-                                            item.id to i 
-                                        }.toMap()
-                                        
-                                        // 2. 更新所有目标的索引
-                                        mockTargets.forEachIndexed { i, item ->
-                                            if (sortedIndices.containsKey(item.id)) {
-                                                val newOrderIndex = when(item.id) {
-                                                    currentItem.id -> sortedIndices[prevItem.id]
-                                                    prevItem.id -> sortedIndices[currentItem.id]
-                                                    else -> sortedIndices[item.id]
-                                                } ?: item.orderIndex
-                                                
-                                                mockTargets[i] = item.copy(orderIndex = newOrderIndex)
-                                            }
-                                        }
+                                        val currentItemId = sortedTargets[index].id
+                                        val prevItemId = sortedTargets[index - 1].id
+                                        targetViewModel.swapTargetsOrder(currentItemId, prevItemId)
                                     }
                                 },
                                 onMoveDown = {
                                     if (index < sortedTargets.size - 1) {
-                                        // 重写排序逻辑 - 直接交换当前显示的两个项目的顺序
-                                        val currentItem = sortedTargets[index]
-                                        val nextItem = sortedTargets[index + 1]
-                                        
-                                        // 1. 重新生成连续的索引值
-                                        val sortedIndices = sortedTargets.mapIndexed { i, item -> 
-                                            item.id to i 
-                                        }.toMap()
-                                        
-                                        // 2. 更新所有目标的索引
-                                        mockTargets.forEachIndexed { i, item ->
-                                            if (sortedIndices.containsKey(item.id)) {
-                                                val newOrderIndex = when(item.id) {
-                                                    currentItem.id -> sortedIndices[nextItem.id]
-                                                    nextItem.id -> sortedIndices[currentItem.id]
-                                                    else -> sortedIndices[item.id]
-                                                } ?: item.orderIndex
-                                                
-                                                mockTargets[i] = item.copy(orderIndex = newOrderIndex)
-                                            }
-                                        }
+                                        val currentItemId = sortedTargets[index].id
+                                        val nextItemId = sortedTargets[index + 1].id
+                                        targetViewModel.swapTargetsOrder(currentItemId, nextItemId)
                                     }
                                 }
                             )
@@ -694,19 +669,12 @@ fun TargetScreen(
                 selectedTarget = null
             },
             onSave = { updatedTarget ->
-                val index = mockTargets.indexOfFirst { it.id == updatedTarget.id }
-                if (index >= 0) {
-                    mockTargets[index] = updatedTarget
-                }
+                targetViewModel.updateTarget(updatedTarget)
                 showTargetDetailDialog = false
                 selectedTarget = null
             },
             onDelete = { targetId ->
-                val index = mockTargets.indexOfFirst { it.id == targetId }
-                if (index >= 0) {
-                    val target = mockTargets[index]
-                    mockTargets[index] = target.copy(isDeleted = true)
-                }
+                targetViewModel.markAsDeleted(targetId)
                 showTargetDetailDialog = false
                 selectedTarget = null
             }
@@ -718,20 +686,18 @@ fun TargetScreen(
         AddTargetDialog(
             onDismiss = { showAddTargetDialog = false },
             onAdd = { newTarget ->
-                // 重新计算所有目标的orderIndex，确保顺序正确
-                val currentTargets = mockTargets.filter { 
-                    it.status == "进行中" && !it.isDeleted 
-                }.sortedBy { it.orderIndex }
-                
-                // 为新目标分配下一个顺序索引
-                val newOrderIndex = if (currentTargets.isEmpty()) 0 else currentTargets.size
-                
-                // 创建包含正确orderIndex的新目标
-                val targetWithOrder = newTarget.copy(orderIndex = newOrderIndex)
-                mockTargets.add(targetWithOrder)
-                
-                showAddTargetDialog = false
-            }
+                val added = targetViewModel.addTarget(
+                    title = newTarget.title,
+                    description = newTarget.description,
+                    deadline = newTarget.deadline,
+                    seedType = newTarget.seedType
+                )
+                // 只有在成功添加的情况下才关闭对话框
+                if (added) {
+                    showAddTargetDialog = false
+                }
+            },
+            targetViewModel = targetViewModel
         )
     }
     
@@ -743,22 +709,12 @@ fun TargetScreen(
                 targetToDelete = null
             },
             onConfirm = {
-                val index = mockTargets.indexOfFirst { it.id == targetToDelete }
-                if (index >= 0) {
-                    if (isPermanentDelete) {
-                        // 永久删除
-                        mockTargets.removeAt(index)
-                        
-                        // 重新计算剩余目标的orderIndex
-                        normalizeOrderIndices()
-                    } else {
-                        // 标记为已删除
-                        val target = mockTargets[index]
-                        mockTargets[index] = target.copy(isDeleted = true)
-                        
-                        // 重新计算剩余未删除目标的orderIndex
-                        normalizeOrderIndices()
-                    }
+                if (isPermanentDelete) {
+                    // 永久删除
+                    targetViewModel.permanentlyDeleteTarget(targetToDelete!!)
+                } else {
+                    // 标记为已删除
+                    targetViewModel.markAsDeleted(targetToDelete!!)
                 }
                 showDeleteConfirmDialog = false
                 targetToDelete = null
@@ -766,25 +722,16 @@ fun TargetScreen(
             isPermanentDelete = isPermanentDelete
         )
     }
-}
-
-// 添加一个辅助函数来重新规范化所有目标的orderIndex
-private fun normalizeOrderIndices() {
-    // 按状态和删除标志分组处理
-    val groups = mockTargets.groupBy { 
-        Triple(it.status, it.isDeleted, it.seedType) 
-    }
     
-    // 对每个分组内的项按原始orderIndex排序，然后分配新的连续索引
-    groups.forEach { (key, items) -> 
-        val sortedItems = items.sortedBy { it.orderIndex }
-        
-        sortedItems.forEachIndexed { index, item ->
-            val itemIndex = mockTargets.indexOfFirst { it.id == item.id }
-            if (itemIndex >= 0) {
-                mockTargets[itemIndex] = mockTargets[itemIndex].copy(orderIndex = index)
-            }
-        }
+    // 显示恢复失败对话框
+    if (showRestoreErrorDialog && targetToRestore != null) {
+        RestoreErrorDialog(
+            onDismiss = {
+                showRestoreErrorDialog = false
+                targetToRestore = null
+            },
+            target = targetToRestore!!
+        )
     }
 }
 
@@ -947,10 +894,12 @@ fun CategorySelector(
 @Composable
 fun AddTargetDialog(
     onDismiss: () -> Unit,
-    onAdd: (TargetItem) -> Unit
+    onAdd: (TargetItem) -> Unit,
+    targetViewModel: TargetViewModel
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
+    var showTitleError by remember { mutableStateOf(false) }
     
     // 日期选择
     var year by remember { mutableStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
@@ -982,10 +931,22 @@ fun AddTargetDialog(
                 // 标题输入
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = { 
+                        title = it
+                        if (showTitleError) showTitleError = false
+                    },
                     label = { Text("目标标题") },
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    singleLine = true,
+                    isError = showTitleError,
+                    supportingText = {
+                        if (showTitleError) {
+                            Text(
+                                text = "此目标名称已存在，请更换",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 )
                 
                 // 描述输入
@@ -1076,8 +1037,8 @@ fun AddTargetDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    // 验证输入
                     if (title.isNotBlank() && selectedSeedType != null) {
+                        // 创建新目标
                         val newTarget = TargetItem(
                             id = UUID.randomUUID().toString(),
                             title = title,
@@ -1086,9 +1047,17 @@ fun AddTargetDialog(
                             progress = 0,
                             status = "进行中",
                             seedType = selectedSeedType!!,
-                            orderIndex = 0 // 这里使用默认值，在TargetScreen中会设置正确的值
+                            orderIndex = 0 // 这里使用默认值，在ViewModel中会设置正确的值
                         )
-                        onAdd(newTarget)
+                        
+                        // 检查标题是否已存在
+                        if (targetViewModel.isTitleExists(title)) {
+                            showTitleError = true
+                        } else {
+                            // 标题不存在，添加新目标
+                            onAdd(newTarget)
+                            onDismiss() // 关闭对话框
+                        }
                     }
                 },
                 enabled = title.isNotBlank() && selectedSeedType != null
@@ -1281,6 +1250,9 @@ fun TargetDetailDialog(
 ) {
     var title by remember { mutableStateOf(target.title) }
     var description by remember { mutableStateOf(target.description) }
+    
+    // 删除确认对话框的状态
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     
     // 解析日期
     val dateParts = target.deadline.split("-").map { it.toIntOrNull() ?: 0 }
@@ -1475,7 +1447,7 @@ fun TargetDetailDialog(
                 item {
                     // 删除按钮
                     TextButton(
-                        onClick = { onDelete(target.id) },
+                        onClick = { showDeleteConfirm = true }, // 显示确认对话框
                         colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                         modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
                     ) {
@@ -1533,6 +1505,18 @@ fun TargetDetailDialog(
             initialYear = year,
             initialMonth = month,
             initialDay = day
+        )
+    }
+    
+    // 删除确认对话框
+    if (showDeleteConfirm) {
+        DeleteConfirmDialog(
+            onDismiss = { showDeleteConfirm = false },
+            onConfirm = { 
+                onDelete(target.id)
+                showDeleteConfirm = false
+            },
+            isPermanentDelete = false
         )
     }
 }
@@ -1624,7 +1608,7 @@ fun TargetCard(
     item: TargetItem,
     isEditMode: Boolean,
     onDeleteClick: () -> Unit,
-    onRestoreClick: () -> Unit = {},
+    onRestoreClick: () -> Unit,
     showRestoreOption: Boolean = false,
     enableMoveUp: Boolean = false,
     enableMoveDown: Boolean = false,
@@ -1997,4 +1981,26 @@ fun parseDate(dateStr: String): Date {
         set(Calendar.SECOND, 0)
         set(Calendar.MILLISECOND, 0)
     }.time
+}
+
+/**
+ * 恢复失败提示对话框
+ */
+@Composable
+fun RestoreErrorDialog(
+    onDismiss: () -> Unit,
+    target: TargetItem
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("无法恢复目标") },
+        text = { 
+            Text("无法恢复\"${target.title}\"，因为已存在同名的目标。请先删除或重命名现有目标后再尝试恢复。")
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("我知道了")
+            }
+        }
+    )
 } 

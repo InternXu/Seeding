@@ -5,7 +5,6 @@ plugins {
     id("com.google.devtools.ksp")
     id("androidx.navigation.safeargs.kotlin")
     id("kotlin-parcelize")
-    id("dagger.hilt.android.plugin")
 }
 
 android {
@@ -114,9 +113,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     
     // Room数据库
-    implementation(libs.androidx.room.runtime)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
+    val room_version = "2.6.1"
+    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version") // Kotlin Extensions and Coroutines support
+    ksp("androidx.room:room-compiler:$room_version") // Use ksp instead of kapt if you're using KSP
     
     // Retrofit网络请求
     implementation(libs.retrofit)
@@ -129,10 +129,10 @@ dependencies {
     // DataStore存储
     implementation(libs.androidx.datastore.preferences)
     
-    // Hilt依赖注入
-    implementation(libs.hilt.android)
-    kapt(libs.hilt.android.compiler)
-    implementation(libs.androidx.hilt.navigation.compose)
+    // Hilt依赖注入 - 注释掉但保留以防后续需要
+    // implementation(libs.hilt.android)
+    // kapt(libs.hilt.android.compiler)
+    // implementation(libs.androidx.hilt.navigation.compose)
     
     // Coil图片加载
     implementation(libs.coil.compose)
