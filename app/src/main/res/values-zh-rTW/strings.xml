@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Seeding</string>
+    
+    <!-- 通用 -->
+    <string name="back">返回</string>
+    <string name="menu">選單</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">確認</string>
+    <string name="delete">刪除</string>
+    <string name="edit">編輯</string>
+    <string name="search">搜索</string>
+    <string name="add_action">添加事項</string>
+    <string name="edit_goals">批量編輯目標</string>
+    
+    <!-- 導航 -->
+    <string name="nav_action">播種</string>
+    <string name="nav_goal">目標</string>
+    <string name="nav_harvest">收穫</string>
+    <string name="nav_profile">會員信息</string>
+    <string name="nav_settings">設置</string>
+    <string name="nav_store">插件商店</string>
+    
+    <!-- 登入註冊 -->
+    <string name="login">登入</string>
+    <string name="login_welcome">歡迎來到Seeding</string>
+    <string name="phone">手機號</string>
+    <string name="password">密碼</string>
+    <string name="confirm_password">確認密碼</string>
+    <string name="forgot_password">忘記密碼？</string>
+    <string name="no_account">沒有帳號？註冊一個</string>
+    <string name="register">註冊</string>
+    <string name="register_title">創建新帳戶</string>
+    <string name="username">用戶名</string>
+    <string name="have_account">已有帳號？返回登入</string>
+    <string name="forgot_password_title">找回密碼</string>
+    <string name="forgot_password_desc">請輸入您的手機號，我們將向您發送驗證碼</string>
+    <string name="send_verification_code">發送驗證碼</string>
+    <string name="verification_code">驗證碼</string>
+    <string name="verification_code_sent">驗證碼已發送到您的手機</string>
+    <string name="verification_code_instruction">請查看短信並輸入驗證碼</string>
+    <string name="return_to_login">返回登入</string>
+    <string name="new_password">新密碼</string>
+    <string name="reset_password">重置密碼</string>
+    <string name="resend">重新發送</string>
+    <string name="back_to_login">返回登入</string>
+    <string name="verify">驗證</string>
+    
+    <!-- 播種界面 -->
+    <string name="action_title">記錄行為</string>
+    <string name="positive_action">正面行為</string>
+    <string name="negative_action">負面行為</string>
+    <string name="action_description">描述您的行為...</string>
+    <string name="select_seed">選擇種子類型</string>
+    <string name="select_goal">關聯目標（可選）</string>
+    <string name="create_promise">創建承諾</string>
+    
+    <!-- 目標界面 -->
+    <string name="goal_title">我的目標</string>
+    <string name="add_goal">添加目標</string>
+    <string name="goal_description">目標描述...</string>
+    <string name="deadline">截止日期</string>
+    <string name="progress">進度</string>
+    <string name="add_milestone">添加進度點</string>
+    <string name="complete">完成</string>
+    <string name="abandon">放棄</string>
+    
+    <!-- 收穫界面 -->
+    <string name="harvest_title">成長分析</string>
+    <string name="stats_daily">每日統計</string>
+    <string name="stats_weekly">每週統計</string>
+    <string name="stats_monthly">每月統計</string>
+    <string name="positive_count">正面行為數</string>
+    <string name="negative_count">負面行為數</string>
+    <string name="goals_completed">已完成目標</string>
+    <string name="active_goals">進行中目標</string>
+    
+    <!-- 種子類型 -->
+    <string name="seed_life">生命</string>
+    <string name="seed_property">財物</string>
+    <string name="seed_relationship">伴侶</string>
+    <string name="seed_honesty">誠實</string>
+    <string name="seed_harmony">和諧</string>
+    <string name="seed_gentleness">柔和</string>
+    <string name="seed_meaning">含義</string>
+    <string name="seed_rejoice">隨喜</string>
+    <string name="seed_compassion">同情</string>
+    <string name="seed_mindfulness">正念</string>
+    <string name="seed_gratitude">感恩</string>
+    <string name="seed_surprise">提前</string>
+    
+    <!-- 設置 -->
+    <string name="settings_title">設置</string>
+    <string name="language">語言</string>
+    <string name="theme">主題</string>
+    <string name="dark_mode">深色模式</string>
+    <string name="notification">通知</string>
+    <string name="about">關於</string>
+    <string name="logout">退出登錄</string>
+    <string name="double_back_exit">再按一次返回退出應用</string>
+    
+    <!-- 顯示設置 -->
+    <string name="display_settings">顯示設置</string>
+    <string name="theme_color">主題顏色</string>
+    <string name="font_size">字體大小</string>
+    <string name="font_size_percentage">%1$d%%</string>
+    
+    <!-- 主題名稱 -->
+    <string name="theme_default">默認主題</string>
+    <string name="theme_nature">自然主題</string>
+    <string name="theme_ocean">海洋主題</string>
+    <string name="theme_vitality">活力主題</string>
+    <string name="theme_floral">花海主題</string>
+    <string name="theme_retro">復古主題</string>
+    <string name="theme_homeland">祖國主題</string>
+    <string name="theme_minimal">極簡主題</string>
+    <string name="theme_sky">天空主題</string>
+    
+    <!-- 語言選項 -->
+    <string name="language_zh_cn">简体中文</string>
+    <string name="language_zh_tw">繁體中文</string>
+    <string name="language_en">English</string>
+    <string name="language_ja">日本語</string>
+</resources> 

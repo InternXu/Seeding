@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Seeding</string>
+    
+    <!-- 一般 -->
+    <string name="back">戻る</string>
+    <string name="menu">メニュー</string>
+    <string name="save">保存</string>
+    <string name="cancel">キャンセル</string>
+    <string name="confirm">確認</string>
+    <string name="delete">削除</string>
+    <string name="edit">編集</string>
+    <string name="search">検索</string>
+    <string name="add_action">アイテム追加</string>
+    <string name="edit_goals">目標編集</string>
+    
+    <!-- ナビゲーション -->
+    <string name="nav_action">種まき</string>
+    <string name="nav_goal">目標</string>
+    <string name="nav_harvest">収穫</string>
+    <string name="nav_profile">会員情報</string>
+    <string name="nav_settings">設定</string>
+    <string name="nav_store">プラグイン</string>
+    
+    <!-- ログイン＆登録 -->
+    <string name="login">ログイン</string>
+    <string name="login_welcome">Seedingへようこそ</string>
+    <string name="phone">電話番号</string>
+    <string name="password">パスワード</string>
+    <string name="confirm_password">パスワード確認</string>
+    <string name="forgot_password">パスワードをお忘れですか？</string>
+    <string name="no_account">アカウントがありませんか？登録する</string>
+    <string name="register">登録</string>
+    <string name="register_title">新規アカウント作成</string>
+    <string name="username">ユーザー名</string>
+    <string name="have_account">アカウントをお持ちですか？ログイン</string>
+    <string name="forgot_password_title">パスワード回復</string>
+    <string name="forgot_password_desc">電話番号を入力してください。認証コードを送信します</string>
+    <string name="send_verification_code">コード送信</string>
+    <string name="verification_code">認証コード</string>
+    <string name="verification_code_sent">認証コードがあなたの電話に送信されました</string>
+    <string name="verification_code_instruction">メッセージを確認してコードを入力してください</string>
+    <string name="return_to_login">ログインに戻る</string>
+    <string name="new_password">新しいパスワード</string>
+    <string name="reset_password">パスワードリセット</string>
+    <string name="resend">再送信</string>
+    <string name="back_to_login">ログインに戻る</string>
+    <string name="verify">確認</string>
+    
+    <!-- アクション画面 -->
+    <string name="action_title">行動記録</string>
+    <string name="positive_action">ポジティブアクション</string>
+    <string name="negative_action">ネガティブアクション</string>
+    <string name="action_description">あなたの行動を説明してください...</string>
+    <string name="select_seed">シード種類を選択</string>
+    <string name="select_goal">関連目標（任意）</string>
+    <string name="create_promise">約束を作成</string>
+    
+    <!-- 目標画面 -->
+    <string name="goal_title">マイ目標</string>
+    <string name="add_goal">目標追加</string>
+    <string name="goal_description">目標の説明...</string>
+    <string name="deadline">期限</string>
+    <string name="progress">進捗</string>
+    <string name="add_milestone">マイルストーン追加</string>
+    <string name="complete">完了</string>
+    <string name="abandon">放棄</string>
+    
+    <!-- 収穫画面 -->
+    <string name="harvest_title">成長分析</string>
+    <string name="stats_daily">日次統計</string>
+    <string name="stats_weekly">週次統計</string>
+    <string name="stats_monthly">月次統計</string>
+    <string name="positive_count">ポジティブアクション</string>
+    <string name="negative_count">ネガティブアクション</string>
+    <string name="goals_completed">完了した目標</string>
+    <string name="active_goals">アクティブな目標</string>
+    
+    <!-- シード種類 -->
+    <string name="seed_life">生命</string>
+    <string name="seed_property">財産</string>
+    <string name="seed_relationship">関係</string>
+    <string name="seed_honesty">誠実</string>
+    <string name="seed_harmony">調和</string>
+    <string name="seed_gentleness">優しさ</string>
+    <string name="seed_meaning">意味</string>
+    <string name="seed_rejoice">喜び</string>
+    <string name="seed_compassion">思いやり</string>
+    <string name="seed_mindfulness">マインドフルネス</string>
+    <string name="seed_gratitude">感謝</string>
+    <string name="seed_surprise">前進</string>
+    
+    <!-- 設定 -->
+    <string name="settings_title">設定</string>
+    <string name="language">言語</string>
+    <string name="theme">テーマ</string>
+    <string name="dark_mode">ダークモード</string>
+    <string name="notification">通知</string>
+    <string name="about">アプリについて</string>
+    <string name="logout">ログアウト</string>
+    <string name="double_back_exit">もう一度押すと終了します</string>
+    
+    <!-- 表示設定 -->
+    <string name="display_settings">表示設定</string>
+    <string name="theme_color">テーマカラー</string>
+    <string name="font_size">フォントサイズ</string>
+    <string name="font_size_percentage">%1$d%%</string>
+    
+    <!-- テーマ名 -->
+    <string name="theme_default">デフォルト</string>
+    <string name="theme_nature">自然</string>
+    <string name="theme_ocean">海</string>
+    <string name="theme_vitality">活力</string>
+    <string name="theme_floral">花</string>
+    <string name="theme_retro">レトロ</string>
+    <string name="theme_homeland">祖国</string>
+    <string name="theme_minimal">ミニマル</string>
+    <string name="theme_sky">空</string>
+    
+    <!-- 言語オプション -->
+    <string name="language_zh_cn">简体中文</string>
+    <string name="language_zh_tw">繁體中文</string>
+    <string name="language_en">English</string>
+    <string name="language_ja">日本語</string>
+</resources> 
