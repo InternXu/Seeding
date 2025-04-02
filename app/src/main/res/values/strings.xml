@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Seeding</string>
+    <string name="app_name">种子</string>
     
     <!-- 通用 -->
     <string name="back">返回</string>
@@ -65,6 +65,27 @@
     <string name="add_milestone">添加进度点</string>
     <string name="complete">完成</string>
     <string name="abandon">放弃</string>
+    <string name="new_goal">添加目标</string>
+    <string name="goal_name">目标名称</string>
+    <string name="goal_detail">目标详情</string>
+    <string name="goal_name_required">目标名称不能为空</string>
+    <string name="goal_seed_required">请至少选择一个关联种子</string>
+    <string name="deadline_required">请选择截止日期</string>
+    <string name="created_time">创建时间</string>
+    <string name="remaining_time">剩余: %1$s</string>
+    <string name="overdue">已逾期</string>
+    <string name="edit_goal">编辑目标</string>
+    <string name="delete_goal">删除目标</string>
+    <string name="confirm_delete">确认删除</string>
+    <string name="delete_goal_warning">您确定要删除此目标吗？删除后可以从"已删除"标签中恢复。</string>
+    <string name="permanent_delete">彻底删除</string>
+    <string name="permanent_delete_warning">您确定要彻底删除此目标吗？此操作无法撤销。</string>
+    <string name="restore_goal">恢复目标</string>
+    <string name="all_goals">全部</string>
+    <string name="completed_goals">已完成</string>
+    <string name="deleted_goals">已删除</string>
+    <string name="no_goals">暂无目标</string>
+    <string name="seed_selection">关联种子</string>
     
     <!-- 收获界面 -->
     <string name="harvest_title">成长分析</string>
@@ -89,6 +110,20 @@
     <string name="seed_mindfulness">正念</string>
     <string name="seed_gratitude">感恩</string>
     <string name="seed_surprise">提前</string>
+    
+    <!-- 种子全名 -->
+    <string name="seed_life_full">保护生命</string>
+    <string name="seed_property_full">尊重他人财物</string>
+    <string name="seed_relationship_full">尊重他人的伴侣关系</string>
+    <string name="seed_honesty_full">诚实言语</string>
+    <string name="seed_harmony_full">和谐言语</string>
+    <string name="seed_gentleness_full">柔和言语</string>
+    <string name="seed_meaning_full">有意义语言</string>
+    <string name="seed_rejoice_full">随喜他人的成功</string>
+    <string name="seed_compassion_full">同情他人的不幸</string>
+    <string name="seed_mindfulness_full">维持正确的世界观</string>
+    <string name="seed_gratitude_full">感恩</string>
+    <string name="seed_surprise_full">提前和惊喜</string>
     
     <!-- 设置 -->
     <string name="settings_title">设置</string>
@@ -122,4 +157,15 @@
     <string name="language_zh_tw">繁體中文</string>
     <string name="language_en">English</string>
     <string name="language_ja">日本語</string>
+    
+    <!-- 日期选择器 -->
+    <string name="year_suffix">年</string>
+    <string name="month_suffix">月</string>
+    <string name="day_suffix">日</string>
+    <string name="select_date">选择日期</string>
+    
+    <string name="confirm_complete">确认完成</string>
+    <string name="complete_goal_warning">您确定要将此目标标记为已完成吗？此操作无法撤销。</string>
+    <string name="enter_edit_mode">进入编辑模式</string>
+    <string name="exit_edit_mode">退出编辑模式</string>
 </resources>

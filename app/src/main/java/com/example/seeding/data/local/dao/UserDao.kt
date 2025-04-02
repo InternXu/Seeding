@@ -9,56 +9,28 @@ import com.example.seeding.data.local.entity.UserEntity
 import kotlinx.coroutines.flow.Flow
 
 /**
- * 用户DAO - 数据层（数据库）
- * 定义用户表的数据库操作
+ * 用户表数据访问对象
  */
 @Dao
 interface UserDao {
-    /**
-     * 插入用户，如果已存在则替换
-     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
     
-    /**
-     * 根据用户ID获取用户
-     */
-    @Query("SELECT * FROM users WHERE id = :userId")
-    suspend fun getUserById(userId: String): UserEntity?
-    
-    /**
-     * 根据手机号获取用户
-     */
-    @Query("SELECT * FROM users WHERE phoneNumber = :phoneNumber")
-    suspend fun getUserByPhoneNumber(phoneNumber: String): UserEntity?
-    
-    /**
-     * 获取当前登录用户
-     */
-    @Query("SELECT * FROM users WHERE isCurrentUser = 1 LIMIT 1")
-    fun getCurrentUser(): Flow<UserEntity?>
-    
-    /**
-     * 标记用户为当前登录用户
-     */
-    @Query("UPDATE users SET isCurrentUser = :isCurrentUser WHERE id = :userId")
-    suspend fun setCurrentUser(userId: String, isCurrentUser: Boolean)
-    
-    /**
-     * 更新用户信息
-     */
     @Update
     suspend fun updateUser(user: UserEntity)
     
-    /**
-     * 清除当前登录用户标记
-     */
-    @Query("UPDATE users SET isCurrentUser = 0")
-    suspend fun clearCurrentUser()
+    @Query("SELECT * FROM users WHERE id = :userId")
+    suspend fun getUserById(userId: String): UserEntity?
     
-    /**
-     * 删除所有用户
-     */
-    @Query("DELETE FROM users")
-    suspend fun deleteAllUsers()
+    @Query("SELECT * FROM users WHERE id = :userId")
+    fun getUserByIdFlow(userId: String): Flow<UserEntity?>
+    
+    @Query("SELECT * FROM users WHERE phone = :phone")
+    suspend fun getUserByPhone(phone: String): UserEntity?
+    
+    @Query("SELECT * FROM users WHERE email = :email")
+    suspend fun getUserByEmail(email: String): UserEntity?
+    
+    @Query("UPDATE users SET lastLoginAt = :timestamp WHERE id = :userId")
+    suspend fun updateLastLogin(userId: String, timestamp: Long)
 } 

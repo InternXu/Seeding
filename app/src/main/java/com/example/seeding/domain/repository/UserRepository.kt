@@ -9,46 +9,32 @@ import kotlinx.coroutines.flow.Flow
  */
 interface UserRepository {
     /**
-     * 根据手机号码登录
-     */
-    suspend fun loginWithPhone(phoneNumber: String, password: String): Result<User>
-    
-    /**
      * 获取当前登录用户
      */
     fun getCurrentUser(): Flow<User?>
     
     /**
-     * 使用手机号码和验证码注册新用户
+     * 设置当前用户
      */
-    suspend fun registerWithPhone(
-        phoneNumber: String, 
-        verificationCode: String, 
-        password: String,
-        username: String
-    ): Result<User>
+    suspend fun setCurrentUser(userId: String)
     
     /**
-     * 发送验证码
+     * 根据用户ID获取用户
      */
-    suspend fun sendVerificationCode(phoneNumber: String): Result<Boolean>
+    suspend fun getUserById(userId: String): User?
     
     /**
-     * 验证验证码
+     * 根据手机号获取用户
      */
-    suspend fun verifyCode(phoneNumber: String, code: String): Result<Boolean>
+    suspend fun getUserByPhoneNumber(phoneNumber: String): User?
     
     /**
-     * 通过验证码重置密码
+     * 保存用户信息
      */
-    suspend fun resetPasswordWithCode(
-        phoneNumber: String,
-        verificationCode: String,
-        newPassword: String
-    ): Result<Boolean>
+    suspend fun saveUser(user: User)
     
     /**
-     * 登出
+     * 使用手机号登录
      */
-    suspend fun logout(): Result<Boolean>
+    suspend fun loginWithPhone(phoneNumber: String, password: String): Result<User>
 } 

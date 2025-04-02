@@ -65,6 +65,31 @@
     <string name="add_milestone">添加進度點</string>
     <string name="complete">完成</string>
     <string name="abandon">放棄</string>
+    <string name="new_goal">添加目標</string>
+    <string name="goal_name">目標名稱</string>
+    <string name="goal_detail">目標詳情</string>
+    <string name="goal_name_required">目標名稱不能為空</string>
+    <string name="goal_seed_required">請至少選擇一個關聯種子</string>
+    <string name="deadline_required">請選擇截止日期</string>
+    <string name="created_time">創建時間</string>
+    <string name="remaining_time">剩餘: %1$s</string>
+    <string name="overdue">已逾期</string>
+    <string name="edit_goal">編輯目標</string>
+    <string name="delete_goal">刪除目標</string>
+    <string name="confirm_delete">確認刪除</string>
+    <string name="delete_goal_warning">您確定要刪除此目標嗎？刪除後可以從"已刪除"標籤中恢復。</string>
+    <string name="permanent_delete">徹底刪除</string>
+    <string name="permanent_delete_warning">您確定要徹底刪除此目標嗎？此操作無法撤銷。</string>
+    <string name="restore_goal">恢復目標</string>
+    <string name="all_goals">全部</string>
+    <string name="completed_goals">已完成</string>
+    <string name="deleted_goals">已刪除</string>
+    <string name="no_goals">暫無目標</string>
+    <string name="seed_selection">關聯種子</string>
+    <string name="confirm_complete">確認完成</string>
+    <string name="complete_goal_warning">您確定要將此目標標記為已完成嗎？此操作無法撤銷。</string>
+    <string name="enter_edit_mode">進入編輯模式</string>
+    <string name="exit_edit_mode">退出編輯模式</string>
     
     <!-- 收穫界面 -->
     <string name="harvest_title">成長分析</string>
@@ -89,6 +114,20 @@
     <string name="seed_mindfulness">正念</string>
     <string name="seed_gratitude">感恩</string>
     <string name="seed_surprise">提前</string>
+    
+    <!-- 種子全名 -->
+    <string name="seed_life_full">保護生命</string>
+    <string name="seed_property_full">尊重他人財物</string>
+    <string name="seed_relationship_full">尊重他人的伴侶關係</string>
+    <string name="seed_honesty_full">誠實言語</string>
+    <string name="seed_harmony_full">和諧言語</string>
+    <string name="seed_gentleness_full">柔和言語</string>
+    <string name="seed_meaning_full">有意義語言</string>
+    <string name="seed_rejoice_full">隨喜他人的成功</string>
+    <string name="seed_compassion_full">同情他人的不幸</string>
+    <string name="seed_mindfulness_full">維持正確的世界觀</string>
+    <string name="seed_gratitude_full">感恩</string>
+    <string name="seed_surprise_full">提前和驚喜</string>
     
     <!-- 設置 -->
     <string name="settings_title">設置</string>
@@ -122,4 +161,10 @@
     <string name="language_zh_tw">繁體中文</string>
     <string name="language_en">English</string>
     <string name="language_ja">日本語</string>
+    
+    <!-- 日期選擇器 -->
+    <string name="year_suffix">年</string>
+    <string name="month_suffix">月</string>
+    <string name="day_suffix">日</string>
+    <string name="select_date">選擇日期</string>
 </resources> 

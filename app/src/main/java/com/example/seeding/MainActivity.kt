@@ -35,10 +35,14 @@ import dagger.hilt.android.AndroidEntryPoint
 import java.util.Locale
 import kotlin.system.exitProcess
 import kotlinx.coroutines.launch
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 在 super.onCreate 之前调用 installSplashScreen
+        installSplashScreen()
+        
         super.onCreate(savedInstanceState)
         
         // 加载应用设置

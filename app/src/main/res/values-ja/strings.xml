@@ -65,6 +65,31 @@
     <string name="add_milestone">マイルストーン追加</string>
     <string name="complete">完了</string>
     <string name="abandon">放棄</string>
+    <string name="new_goal">目標を追加</string>
+    <string name="goal_name">目標名</string>
+    <string name="goal_detail">目標の詳細</string>
+    <string name="goal_name_required">目標名を入力してください</string>
+    <string name="goal_seed_required">少なくとも一つのシードを選択してください</string>
+    <string name="deadline_required">期限を選択してください</string>
+    <string name="created_time">作成日時</string>
+    <string name="remaining_time">残り: %1$s</string>
+    <string name="overdue">期限超過</string>
+    <string name="edit_goal">目標を編集</string>
+    <string name="delete_goal">目標を削除</string>
+    <string name="confirm_delete">削除確認</string>
+    <string name="delete_goal_warning">この目標を削除してもよろしいですか？「削除済み」タブから復元できます。</string>
+    <string name="permanent_delete">完全に削除</string>
+    <string name="permanent_delete_warning">この目標を完全に削除してもよろしいですか？この操作は元に戻せません。</string>
+    <string name="restore_goal">目標を復元</string>
+    <string name="all_goals">すべて</string>
+    <string name="completed_goals">完了</string>
+    <string name="deleted_goals">削除済み</string>
+    <string name="no_goals">目標がありません</string>
+    <string name="seed_selection">関連シード</string>
+    <string name="confirm_complete">完了確認</string>
+    <string name="complete_goal_warning">この目標を完了としてマークしてもよろしいですか？この操作は元に戻せません。</string>
+    <string name="enter_edit_mode">編集モードに入る</string>
+    <string name="exit_edit_mode">編集モードを終了</string>
     
     <!-- 収穫画面 -->
     <string name="harvest_title">成長分析</string>
@@ -89,6 +114,20 @@
     <string name="seed_mindfulness">マインドフルネス</string>
     <string name="seed_gratitude">感謝</string>
     <string name="seed_surprise">前進</string>
+    
+    <!-- シード全名 -->
+    <string name="seed_life_full">生命を守る</string>
+    <string name="seed_property_full">他人の財産を尊重する</string>
+    <string name="seed_relationship_full">関係を尊重する</string>
+    <string name="seed_honesty_full">誠実な言葉</string>
+    <string name="seed_harmony_full">調和のとれた言葉</string>
+    <string name="seed_gentleness_full">優しい言葉</string>
+    <string name="seed_meaning_full">意味のある言葉</string>
+    <string name="seed_rejoice_full">他人の成功を喜ぶ</string>
+    <string name="seed_compassion_full">他人の不幸に対する思いやり</string>
+    <string name="seed_mindfulness_full">正しい世界観を維持する</string>
+    <string name="seed_gratitude_full">感謝</string>
+    <string name="seed_surprise_full">前進と驚き</string>
     
     <!-- 設定 -->
     <string name="settings_title">設定</string>
@@ -122,4 +161,10 @@
     <string name="language_zh_tw">繁體中文</string>
     <string name="language_en">English</string>
     <string name="language_ja">日本語</string>
+    
+    <!-- 日付選択 -->
+    <string name="year_suffix">年</string>
+    <string name="month_suffix">月</string>
+    <string name="day_suffix">日</string>
+    <string name="select_date">日付を選択</string>
 </resources> 

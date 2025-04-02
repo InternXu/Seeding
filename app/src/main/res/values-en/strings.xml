@@ -65,6 +65,31 @@
     <string name="add_milestone">Add Milestone</string>
     <string name="complete">Complete</string>
     <string name="abandon">Abandon</string>
+    <string name="new_goal">Add Goal</string>
+    <string name="goal_name">Goal Name</string>
+    <string name="goal_detail">Goal Details</string>
+    <string name="goal_name_required">Goal name cannot be empty</string>
+    <string name="goal_seed_required">Please select at least one seed</string>
+    <string name="deadline_required">Please select a deadline</string>
+    <string name="created_time">Created Time</string>
+    <string name="remaining_time">Remaining: %1$s</string>
+    <string name="overdue">Overdue</string>
+    <string name="edit_goal">Edit Goal</string>
+    <string name="delete_goal">Delete Goal</string>
+    <string name="confirm_delete">Confirm Delete</string>
+    <string name="delete_goal_warning">Are you sure you want to delete this goal? It can be recovered from the "Deleted" tab.</string>
+    <string name="permanent_delete">Permanently Delete</string>
+    <string name="permanent_delete_warning">Are you sure you want to permanently delete this goal? This action cannot be undone.</string>
+    <string name="restore_goal">Restore Goal</string>
+    <string name="all_goals">All</string>
+    <string name="completed_goals">Completed</string>
+    <string name="deleted_goals">Deleted</string>
+    <string name="no_goals">No Goals</string>
+    <string name="seed_selection">Associated Seeds</string>
+    <string name="confirm_complete">Confirm Complete</string>
+    <string name="complete_goal_warning">Are you sure you want to mark this goal as complete? This action cannot be undone.</string>
+    <string name="enter_edit_mode">Enter Edit Mode</string>
+    <string name="exit_edit_mode">Exit Edit Mode</string>
     
     <!-- Harvest Screen -->
     <string name="harvest_title">Growth Analysis</string>
@@ -89,6 +114,20 @@
     <string name="seed_mindfulness">Mindfulness</string>
     <string name="seed_gratitude">Gratitude</string>
     <string name="seed_surprise">Advance</string>
+    
+    <!-- Seed Full Names -->
+    <string name="seed_life_full">Protect Life</string>
+    <string name="seed_property_full">Respect Others\' Property</string>
+    <string name="seed_relationship_full">Respect Relationships</string>
+    <string name="seed_honesty_full">Honest Speech</string>
+    <string name="seed_harmony_full">Harmonious Speech</string>
+    <string name="seed_gentleness_full">Gentle Speech</string>
+    <string name="seed_meaning_full">Meaningful Speech</string>
+    <string name="seed_rejoice_full">Rejoice in Others\' Success</string>
+    <string name="seed_compassion_full">Compassion for Others\' Misfortune</string>
+    <string name="seed_mindfulness_full">Maintain Correct Worldview</string>
+    <string name="seed_gratitude_full">Gratitude</string>
+    <string name="seed_surprise_full">Advance and Surprise</string>
     
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -122,4 +161,10 @@
     <string name="language_zh_tw">繁體中文</string>
     <string name="language_en">English</string>
     <string name="language_ja">日本語</string>
+    
+    <!-- Date Picker -->
+    <string name="year_suffix">Year</string>
+    <string name="month_suffix">Month</string>
+    <string name="day_suffix">Day</string>
+    <string name="select_date">Select Date</string>
 </resources> 

@@ -13,14 +13,12 @@ import com.example.seeding.ui.screens.login.LoginScreen
 import com.example.seeding.ui.screens.login.RegisterScreen
 import com.example.seeding.ui.screens.profile.ProfileScreen
 import com.example.seeding.ui.screens.settings.SettingsScreen
-import com.example.seeding.ui.screens.splash.SplashScreen
 import com.example.seeding.ui.screens.store.StoreScreen
 
 /**
  * 应用程序的导航目标
  */
 sealed class Screen(val route: String) {
-    object Splash : Screen("splash")
     object Login : Screen("login")
     object Register : Screen("register")
     object ForgotPassword : Screen("forgot_password")
@@ -55,16 +53,12 @@ sealed class Screen(val route: String) {
 @Composable
 fun SeedingNavigation(
     navController: NavHostController,
-    startDestination: String = Screen.Splash.route
+    startDestination: String
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(Screen.Splash.route) {
-            SplashScreen(navController = navController)
-        }
-        
         composable(Screen.Login.route) {
             LoginScreen(navController = navController)
         }

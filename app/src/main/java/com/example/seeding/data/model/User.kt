@@ -1,23 +1,23 @@
 package com.example.seeding.data.model
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
-@Entity(tableName = "users")
+/**
+ * 用户领域模型类 - 用于UI层
+ */
 data class User(
-    @PrimaryKey val userId: String,
+    val userId: String,
     val username: String,
-    val email: String,
+    val phoneNumber: String = "",
+    val email: String = "",
     val avatarUrl: String? = null,
-    val membershipType: MembershipType = MembershipType.FREE,
-    val seedCoin: Int = 0,
-    val createdAt: Long = System.currentTimeMillis(),
-    val lastLoginAt: Long = System.currentTimeMillis()
+    val createdAt: Long = 0L,
+    val lastLoginAt: Long = 0L,
+    val isCurrentUser: Boolean = false
 )
 
+/**
+ * 会员类型枚举
+ */
 enum class MembershipType {
     FREE, // 免费用户
-    EXPERIENCE, // 体验会员
-    ANNUAL, // 年度会员
-    PROFESSIONAL // 专业会员
+    PREMIUM // 付费用户
 } 

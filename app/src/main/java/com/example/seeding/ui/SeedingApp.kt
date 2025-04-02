@@ -71,6 +71,7 @@ import com.example.seeding.ui.theme.Typography
 import com.example.seeding.util.ProvideLanguageSettings
 import androidx.compose.runtime.collectAsState
 import com.example.seeding.util.LocalLanguageState
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -165,7 +166,6 @@ fun SeedingApp(
                 
                 // 当前是否在登录或启动页面
                 val isAuthScreen = currentDestination?.route == Screen.Login.route || 
-                                currentDestination?.route == Screen.Splash.route ||
                                 currentDestination?.route == Screen.Register.route ||
                                 currentDestination?.route == Screen.ForgotPassword.route
                 
@@ -291,7 +291,13 @@ fun SeedingApp(
                                             ActionButton(
                                                 icon = Icons.Default.Edit,
                                                 contentDescription = stringResource(R.string.edit_goals),
-                                                onClick = { /* TODO: 批量编辑功能 */ }
+                                                onClick = {
+                                                    // 使用savedStateHandle存储编辑模式状态
+                                                    val currentEntry = navController.currentBackStackEntry
+                                                    val savedStateHandle = currentEntry?.savedStateHandle
+                                                    val currentEditMode = savedStateHandle?.get<Boolean>("isEditMode") ?: false
+                                                    savedStateHandle?.set("isEditMode", !currentEditMode)
+                                                }
                                             )
                                         }
                                     }
@@ -340,7 +346,7 @@ fun SeedingApp(
                         ) {
                             SeedingNavigation(
                                 navController = navController,
-                                startDestination = Screen.Splash.route
+                                startDestination = Screen.Login.route
                             )
                         }
                     }

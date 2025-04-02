@@ -35,7 +35,6 @@ fun SeedingTopAppBar(
 
     // 登录相关页面不显示顶部应用栏
     val isAuthScreen = currentRoute == Screen.Login.route || 
-                       currentRoute == Screen.Splash.route || 
                        currentRoute == Screen.Register.route || 
                        currentRoute == Screen.ForgotPassword.route
     
@@ -121,7 +120,6 @@ private fun getScreenTitle(currentRoute: String?): String {
         currentRoute == Screen.Login.route -> stringResource(R.string.login)
         currentRoute == Screen.Register.route -> stringResource(R.string.register)
         currentRoute == Screen.ForgotPassword.route -> stringResource(R.string.forgot_password_title)
-        currentRoute == Screen.Splash.route -> stringResource(R.string.app_name)
         else -> stringResource(R.string.app_name)
     }
 } 
