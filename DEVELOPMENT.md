@@ -44,6 +44,73 @@ LaunchedEffect(currentPage) {
 }
 ```
 
+### 5.4 Room数据库集成
+
+Room数据库集成通过以下步骤实现：
+
+1. **实体定义**：在`data/local/entity`包中定义数据库实体类
+2. **DAO接口**：在`data/local/dao`包中定义数据访问对象接口
+3. **类型转换器**：在`Converters`类中实现复杂类型转换
+4. **数据库类**：创建`SeedingDatabase`类统一管理数据库
+5. **依赖注入**：通过Hilt注入数据库和DAO组件
+6. **仓库实现**：使用Room DAO实现仓库接口
+
+数据初始化通过`SeedingApplication`中的初始化代码完成：
+```kotlin
+private fun initializeData() {
+    applicationScope.launch(Dispatchers.IO) {
+        try {
+            // 初始化种子数据
+            seedRepository.initializeSeeds()
+            Log.d("SeedingApplication", "应用数据初始化完成")
+        } catch (e: Exception) {
+            Log.e("SeedingApplication", "初始化数据失败: ${e.message}", e)
+        }
+    }
+}
+```
+
+数据库创建时的回调还会自动填充初始数据：
+```kotlin
+.addCallback(object : Callback() {
+    override fun onCreate(db: SupportSQLiteDatabase) {
+        super.onCreate(db)
+        // 在数据库创建时预填充种子数据
+        INSTANCE?.let { database ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val seedDao = database.seedDao()
+                val seedEntities = SeedUtils.getAllSeedModels().map { seed ->
+                    SeedEntity(/* ... */)
+                }
+                seedDao.insertSeeds(seedEntities)
+            }
+        }
+    }
+})
+```
+
+### 5.5 实体-模型映射
+
+应用采用了多层架构，不同层使用不同的数据模型：
+1. **实体(Entity)**：数据库层使用，包含持久化相关字段
+2. **领域模型(Model)**：业务逻辑层使用，包含业务相关字段
+3. **UI模型(UiState)**：UI层使用，包含显示相关字段
+
+`EntityMappers`类负责在这些模型之间进行转换：
+```kotlin
+object EntityMappers {
+    // 实体到领域模型的转换
+    fun mapToGoal(entity: GoalEntity): Goal { /* ... */ }
+    
+    // 领域模型到实体的转换
+    fun mapToGoalEntity(model: Goal): GoalEntity { /* ... */ }
+    
+    // 其他转换方法...
+}
+```
+
+这种分层架构确保了关注点分离，使代码更易于测试和维护。
+
 ## 6. 详细开发指南
 
 ### 6.1 新增主题
@@ -123,796 +190,322 @@ Material Design 3建议每个主题至少定义以下颜色：
 
 建议使用Material Theme Builder工具帮助生成完整的颜色方案。
 
-### 6.2 新增语言
+### 6.2 新增数据库实体与DAO
 
-#### 6.2.1 步骤详解
+要添加新的数据库实体和相应的数据访问对象，请按照以下步骤操作：
 
-1. **添加语言常量**：在`LanguageManager.kt`中添加新语言的代码常量
+1. **创建实体类**：在`data/local/entity`包中创建新的实体类
    ```kotlin
-   // 语言代码常量
-   const val LANGUAGE_FRENCH = "fr" // 法语
-   ```
-
-2. **更新语言映射**：在`LanguageManager`中添加语言代码和名称的映射
-   ```kotlin
-   // 语言显示名称到语言代码的映射
-   private val languageNameToCode = mapOf(
-       "简体中文" to LANGUAGE_CHINESE_SIMPLIFIED,
-       "繁體中文" to LANGUAGE_CHINESE_TRADITIONAL,
-       "English" to LANGUAGE_ENGLISH,
-       "日本語" to LANGUAGE_JAPANESE,
-       "Français" to LANGUAGE_FRENCH // 添加法语
-   )
-   
-   // 语言代码到语言显示名称的映射
-   private val languageCodeToName = mapOf(
-       LANGUAGE_CHINESE_SIMPLIFIED to "简体中文",
-       LANGUAGE_CHINESE_TRADITIONAL to "繁體中文",
-       LANGUAGE_ENGLISH to "English",
-       LANGUAGE_JAPANESE to "日本語",
-       LANGUAGE_FRENCH to "Français" // 添加法语
-   )
-   ```
-
-3. **更新语言区域逻辑**：在`updateResources`和`LocaleAwareComposable`中添加新语言的Locale创建
-   ```kotlin
-   val locale = when {
-       languageCode.startsWith("zh-CN") -> Locale.SIMPLIFIED_CHINESE
-       languageCode.startsWith("zh-TW") -> Locale.TRADITIONAL_CHINESE
-       languageCode.startsWith("en") -> Locale.ENGLISH
-       languageCode.startsWith("ja") -> Locale.JAPANESE
-       languageCode.startsWith("fr") -> Locale.FRENCH // 添加法语
-       else -> Locale.getDefault()
-   }
-   ```
-
-4. **添加语言资源文件**：创建对应语言的资源文件目录和字符串资源
-   - 创建`res/values-fr`目录
-   - 添加`strings.xml`文件，包含所有翻译
-   ```xml
-   <?xml version="1.0" encoding="utf-8"?>
-   <resources>
-       <string name="app_name">Seeding</string>
-       <string name="nav_action">Semer</string>
-       <string name="nav_goal">Objectifs</string>
-       <string name="nav_harvest">Récolter</string>
-       <!-- 其他翻译 -->
-   </resources>
-   ```
-
-5. **更新设置界面**：在`SettingsScreen.kt`的语言列表中添加新选项
-   ```kotlin
-   val languages = listOf(
-       stringResource(R.string.language_zh_cn),
-       stringResource(R.string.language_zh_tw),
-       stringResource(R.string.language_en),
-       stringResource(R.string.language_ja),
-       stringResource(R.string.language_fr) // 添加法语
-   )
-   ```
-
-6. **添加语言选项字符串**：在所有语言的`strings.xml`中添加新语言的显示名称
-   ```xml
-   <string name="language_fr">Français</string>
-   ```
-
-7. **测试**：确保所有页面在新语言下正确显示
-
-#### 6.2.2 翻译管理建议
-
-- 使用Excel或Google Sheets管理所有语言的翻译，便于对比和更新
-- 按功能模块组织字符串，方便定位
-- 使用翻译变量确保一致性，如`%1$s`表示插入的名称
-- 考虑使用专业翻译服务确保准确性
-
-### 6.3 新增页面
-
-#### 6.3.1 创建新页面的完整流程
-
-1. **定义路由**：在`Screen.kt`中添加新页面路由
-   ```kotlin
-   sealed class Screen(val route: String) {
-       // ... 现有页面
-       object NewFeature : Screen("new_feature")
-       // 如果有子页面
-       object NewFeatureDetail : Screen("new_feature/{itemId}") {
-           fun createRoute(itemId: String) = "new_feature/$itemId"
-       }
-   }
-   ```
-
-2. **创建ViewModel**：创建负责页面逻辑的ViewModel类
-   ```kotlin
-   @HiltViewModel
-   class NewFeatureViewModel @Inject constructor(
-       private val repository: NewFeatureRepository
-   ) : ViewModel() {
-       // UI状态
-       private val _uiState = MutableStateFlow(NewFeatureUiState())
-       val uiState: StateFlow<NewFeatureUiState> = _uiState.asStateFlow()
-       
-       // 初始化
-       init {
-           loadData()
-       }
-       
-       // 加载数据
-       private fun loadData() {
-           viewModelScope.launch {
-               try {
-                   _uiState.update { it.copy(isLoading = true) }
-                   val data = repository.getData()
-                   _uiState.update { 
-                       it.copy(
-                           data = data,
-                           isLoading = false
-                       ) 
-                   }
-               } catch (e: Exception) {
-                   _uiState.update { 
-                       it.copy(
-                           errorMessage = e.message ?: "加载失败",
-                           isLoading = false
-                       ) 
-                   }
-               }
-           }
-       }
-       
-       // 其他操作方法...
-   }
-   
-   // UI状态数据类
-   data class NewFeatureUiState(
-       val data: List<NewFeatureItem> = emptyList(),
-       val isLoading: Boolean = false,
-       val errorMessage: String? = null
-   )
-   ```
-
-3. **创建UI界面**：创建Composable函数实现界面
-   ```kotlin
-   @Composable
-   fun NewFeatureScreen(
-       navController: NavController,
-       viewModel: NewFeatureViewModel = hiltViewModel()
-   ) {
-       // 收集UI状态
-       val uiState by viewModel.uiState.collectAsState()
-       
-       // 页面布局
-       Column(
-           modifier = Modifier
-               .fillMaxSize()
-               .padding(16.dp)
-       ) {
-           // 标题
-           Text(
-               text = stringResource(R.string.new_feature_title),
-               style = MaterialTheme.typography.headlineMedium,
-               modifier = Modifier.padding(bottom = 16.dp)
-           )
-           
-           // 加载状态
-           if (uiState.isLoading) {
-               CircularProgressIndicator(
-                   modifier = Modifier.align(Alignment.CenterHorizontally)
-               )
-           }
-           
-           // 错误消息
-           uiState.errorMessage?.let { error ->
-               Text(
-                   text = error,
-                   color = MaterialTheme.colorScheme.error,
-                   modifier = Modifier.padding(vertical = 8.dp)
-               )
-           }
-           
-           // 内容列表
-           LazyColumn {
-               items(uiState.data) { item ->
-                   NewFeatureItem(
-                       item = item,
-                       onClick = {
-                           // 导航到详情页
-                           navController.navigate(
-                               Screen.NewFeatureDetail.createRoute(item.id)
-                           )
-                       }
-                   )
-               }
-           }
-           
-           // 其他UI元素...
-       }
-   }
-   
-   @Composable
-   private fun NewFeatureItem(
-       item: NewFeatureItem,
-       onClick: () -> Unit
-   ) {
-       // 实现列表项UI
-   }
-   ```
-
-4. **添加导航配置**：在`SeedingNavigation.kt`中添加新路由
-   ```kotlin
-   @Composable
-   fun SeedingNavigation(
-       navController: NavHostController,
-       startDestination: String = Screen.Splash.route
-   ) {
-       NavHost(
-           navController = navController,
-           startDestination = startDestination
-       ) {
-           // ... 现有路由
-           
-           // 新页面路由
-           composable(Screen.NewFeature.route) {
-               NewFeatureScreen(navController = navController)
-           }
-           
-           // 新页面详情路由
-           composable(
-               route = Screen.NewFeatureDetail.route,
-               arguments = listOf(
-                   navArgument("itemId") { type = NavType.StringType }
-               )
-           ) { backStackEntry ->
-               val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
-               NewFeatureDetailScreen(
-                   itemId = itemId,
-                   navController = navController
-               )
-           }
-       }
-   }
-   ```
-
-5. **添加到导航菜单**：根据需要添加到底部导航栏或抽屉菜单
-   - 添加到底部导航栏：
-   ```kotlin
-   val bottomNavItems = listOf(
-       // ... 现有项目
-       BottomNavItem(
-           route = Screen.NewFeature.route,
-           selectedIcon = Icons.Filled.NewIcon,
-           unselectedIcon = Icons.Outlined.NewIcon,
-           title = stringResource(R.string.nav_new_feature)
-       )
-   )
-   ```
-   - 添加到抽屉菜单：
-   ```kotlin
-   val drawerItems = listOf(
-       // ... 现有项目
-       DrawerItem(
-           route = Screen.NewFeature.route,
-           icon = Icons.Default.NewIcon,
-           title = stringResource(R.string.nav_new_feature)
-       )
-   )
-   ```
-
-6. **添加资源字符串**：在`strings.xml`中添加相关字符串
-   ```xml
-   <string name="nav_new_feature">新功能</string>
-   <string name="new_feature_title">新功能标题</string>
-   <!-- 其他字符串 -->
-   ```
-
-7. **创建相关数据模型和仓库**：
-   ```kotlin
-   // 数据模型
-   data class NewFeatureItem(
-       val id: String,
-       val title: String,
+   @Entity(tableName = "your_entity_table")
+   data class YourEntity(
+       @PrimaryKey(autoGenerate = true)
+       val id: Long = 0,
+       val name: String,
        val description: String,
-       // 其他属性
+       // 其他字段...
+       
+       // 可选的关系字段
+       @ForeignKey(
+           entity = ParentEntity::class,
+           parentColumns = ["id"],
+           childColumns = ["parentId"],
+           onDelete = ForeignKey.CASCADE
+       )
+       val parentId: String
+   )
+   ```
+
+2. **创建DAO接口**：在`data/local/dao`包中创建新的DAO接口
+   ```kotlin
+   @Dao
+   interface YourEntityDao {
+       @Insert(onConflict = OnConflictStrategy.REPLACE)
+       suspend fun insert(entity: YourEntity): Long
+       
+       @Update
+       suspend fun update(entity: YourEntity)
+       
+       @Delete
+       suspend fun delete(entity: YourEntity)
+       
+       @Query("SELECT * FROM your_entity_table WHERE id = :id")
+       suspend fun getById(id: Long): YourEntity?
+       
+       @Query("SELECT * FROM your_entity_table ORDER BY name ASC")
+       fun getAll(): Flow<List<YourEntity>>
+       
+       // 其他查询方法...
+   }
+   ```
+
+3. **更新数据库类**：在`SeedingDatabase`类中添加新实体和DAO
+   ```kotlin
+   @Database(
+       entities = [
+           UserEntity::class,
+           SeedEntity::class,
+           GoalEntity::class,
+           YourEntity::class // 添加新实体
+       ],
+       version = 1,
+       exportSchema = false
+   )
+   abstract class SeedingDatabase : RoomDatabase() {
+       abstract fun userDao(): UserDao
+       abstract fun seedDao(): SeedDao
+       abstract fun goalDao(): GoalDao
+       abstract fun yourEntityDao(): YourEntityDao // 添加新DAO
+       
+       // 其他代码...
+   }
+   ```
+
+4. **添加依赖注入**：在`DatabaseModule`中添加新DAO的提供方法
+   ```kotlin
+   @Provides
+   fun provideYourEntityDao(database: SeedingDatabase): YourEntityDao {
+       return database.yourEntityDao()
+   }
+   ```
+
+5. **创建领域模型和映射器**：创建对应的领域模型和映射方法
+   ```kotlin
+   // 领域模型
+   data class YourModel(
+       val id: Long,
+       val name: String,
+       val description: String,
+       // 其他字段...
    )
    
+   // 在EntityMappers中添加映射方法
+   fun mapToYourModel(entity: YourEntity): YourModel {
+       return YourModel(
+           id = entity.id,
+           name = entity.name,
+           description = entity.description,
+           // 其他字段映射...
+       )
+   }
+   
+   fun mapToYourEntity(model: YourModel): YourEntity {
+       return YourEntity(
+           id = model.id,
+           name = model.name,
+           description = model.description,
+           // 其他字段映射...
+       )
+   }
+   ```
+
+6. **创建仓库接口和实现**：创建仓库接口和实现类
+   ```kotlin
    // 仓库接口
-   interface NewFeatureRepository {
-       suspend fun getData(): List<NewFeatureItem>
-       // 其他方法
+   interface YourRepository {
+       fun getAll(): Flow<List<YourModel>>
+       suspend fun getById(id: Long): YourModel?
+       suspend fun save(model: YourModel): Long
+       suspend fun update(model: YourModel)
+       suspend fun delete(model: YourModel)
    }
    
    // 仓库实现
-   class NewFeatureRepositoryImpl @Inject constructor(
-       private val api: ApiService,
-       private val dao: NewFeatureDao
-   ) : NewFeatureRepository {
-       override suspend fun getData(): List<NewFeatureItem> {
-           // 实现逻辑
-       }
+   @Singleton
+   class YourRepositoryImpl @Inject constructor(
+       private val yourEntityDao: YourEntityDao
+   ) : YourRepository {
+       // 实现仓库接口方法...
    }
    ```
 
-8. **更新依赖注入模块**：在Hilt模块中添加新仓库
+7. **更新仓库模块**：在`RepositoryModule`中添加新仓库的绑定
    ```kotlin
-   @Module
-   @InstallIn(SingletonComponent::class)
-   object RepositoryModule {
-       // ... 现有绑定
+   @Binds
+   @Singleton
+   abstract fun bindYourRepository(impl: YourRepositoryImpl): YourRepository
+   ```
+
+### 6.3 后端与云端集成准备
+
+当前的架构设计中已经为未来的云端集成做了准备：
+
+1. **实体同步标记**：`GoalEntity`中包含`isSynced`字段，用于标记是否已与云端同步
+2. **未同步数据查询**：`GoalDao`中包含获取未同步数据的方法
+   ```kotlin
+   @Query("SELECT * FROM goals WHERE userId = :userId AND isSynced = 0")
+   suspend fun getUnsyncedGoals(userId: String): List<GoalEntity>
+   ```
+3. **数据同步状态更新**：`GoalDao`中包含更新同步状态的方法
+   ```kotlin
+   @Query("UPDATE goals SET isSynced = :synced WHERE goalId = :goalId")
+   suspend fun updateSyncStatus(goalId: String, synced: Boolean)
+   ```
+
+要实现完整的云端集成，需要进一步完成以下步骤：
+
+1. **API服务定义**：在`data/remote`包中定义API接口
+   ```kotlin
+   interface GoalApiService {
+       @GET("goals")
+       suspend fun getGoals(@Query("userId") userId: String): List<GoalDto>
        
-       @Provides
-       @Singleton
-       fun provideNewFeatureRepository(
-           api: ApiService,
-           dao: NewFeatureDao
-       ): NewFeatureRepository {
-           return NewFeatureRepositoryImpl(api, dao)
-       }
+       @POST("goals")
+       suspend fun createGoal(@Body goal: GoalDto): GoalDto
+       
+       @PUT("goals/{goalId}")
+       suspend fun updateGoal(@Path("goalId") goalId: String, @Body goal: GoalDto): GoalDto
+       
+       @DELETE("goals/{goalId}")
+       suspend fun deleteGoal(@Path("goalId") goalId: String)
    }
    ```
 
-#### 6.3.2 页面设计最佳实践
-
-- **状态提升**：将状态尽可能提升到ViewModel，保持UI无状态
-- **组件化**：将复杂UI拆分为可重用组件
-- **预览支持**：添加`@Preview`注解帮助UI开发
-- **错误处理**：实现优雅的错误状态和重试机制
-- **加载状态**：添加骨架屏或加载指示器
-
-### 6.4 新增自定义组件
-
-#### 6.4.1 创建可复用组件
-
-1. **定义组件接口**：确定组件参数和事件回调
+2. **数据传输对象**：创建DTO类进行网络通信
    ```kotlin
-   @Composable
-   fun CustomComponent(
-       title: String,
-       description: String? = null,
-       isEnabled: Boolean = true,
-       onClick: () -> Unit,
-       modifier: Modifier = Modifier
-   ) {
-       // 实现组件UI
-   }
-   ```
-
-2. **提供默认样式**：遵循Material Design指南，使用主题颜色
-   ```kotlin
-   val backgroundColor = when {
-       !isEnabled -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-       else -> MaterialTheme.colorScheme.surface
-   }
-   
-   val contentColor = when {
-       !isEnabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-       else -> MaterialTheme.colorScheme.onSurface
-   }
-   ```
-
-3. **提供布局修饰符**：允许自定义样式
-   ```kotlin
-   Surface(
-       modifier = modifier
-           .fillMaxWidth()
-           .clickable(
-               enabled = isEnabled,
-               onClick = onClick
-           ),
-       shape = MaterialTheme.shapes.medium,
-       color = backgroundColor,
-       contentColor = contentColor
-   ) {
-       // 组件内容
-   }
-   ```
-
-4. **添加辅助功能支持**：
-   ```kotlin
-   .semantics {
-       contentDescription = "$title ${description ?: ""}"
-       disabled = !isEnabled
-   }
-   ```
-
-5. **创建预览**：
-   ```kotlin
-   @Preview(showBackground = true)
-   @Composable
-   private fun CustomComponentPreview() {
-       SeedingTheme {
-           CustomComponent(
-               title = "示例标题",
-               description = "示例描述文本",
-               onClick = {}
-           )
-       }
-   }
-   ```
-
-#### 6.4.2 组件最佳实践
-
-- **参数默认值**：为非必需参数提供合理默认值
-- **修饰符透传**：始终包含`modifier`参数并应用
-- **状态提升**：保持组件无状态，通过参数和回调传递状态
-- **主题适应**：使用MaterialTheme的颜色和排版
-- **内容槽**：对于复杂组件，提供`content`参数允许自定义内容
-
-### 6.5 数据存储和API集成
-
-#### 6.5.1 本地数据存储
-
-1. **SharedPreferences**：适用于简单键值对
-   ```kotlin
-   // 保存设置
-   fun saveSettings(context: Context) {
-       val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-       prefs.edit()
-           .putString("theme_type", currentThemeType.name)
-           .putBoolean("dark_mode", isDarkMode)
-           .putFloat("font_size", fontSizeScale)
-           .apply()
-   }
-   
-   // 加载设置
-   fun loadSettings(context: Context) {
-       val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-       val themeTypeName = prefs.getString("theme_type", ThemeType.DEFAULT.name)
-       try {
-           currentThemeType = ThemeType.valueOf(themeTypeName ?: ThemeType.DEFAULT.name)
-       } catch (e: Exception) {
-           currentThemeType = ThemeType.DEFAULT
-       }
-       isDarkMode = prefs.getBoolean("dark_mode", false)
-       fontSizeScale = prefs.getFloat("font_size", 1.0f)
-   }
-   ```
-
-2. **Room数据库**：适用于结构化数据
-   - 定义实体：
-   ```kotlin
-   @Entity(tableName = "seeds")
-   data class SeedEntity(
-       @PrimaryKey(autoGenerate = true) val id: Int = 0,
+   data class GoalDto(
+       val id: String,
+       val userId: String,
        val title: String,
        val description: String,
-       val createdDate: Long,
-       val targetDate: Long?,
-       val status: Int
+       val seedIds: List<Int>,
+       val deadline: Long,
+       val createdAt: Long,
+       val status: String,
+       // 其他字段...
    )
    ```
-   - 创建DAO：
-   ```kotlin
-   @Dao
-   interface SeedDao {
-       @Query("SELECT * FROM seeds ORDER BY createdDate DESC")
-       fun getAllSeeds(): Flow<List<SeedEntity>>
-       
-       @Insert
-       suspend fun insertSeed(seed: SeedEntity): Long
-       
-       @Update
-       suspend fun updateSeed(seed: SeedEntity)
-       
-       @Delete
-       suspend fun deleteSeed(seed: SeedEntity)
-   }
-   ```
-   - 创建数据库：
-   ```kotlin
-   @Database(entities = [SeedEntity::class], version = 1)
-   abstract class AppDatabase : RoomDatabase() {
-       abstract fun seedDao(): SeedDao
-   }
-   ```
-   - 依赖注入配置：
-   ```kotlin
-   @Module
-   @InstallIn(SingletonComponent::class)
-   object DatabaseModule {
-       @Provides
-       @Singleton
-       fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-           return Room.databaseBuilder(
-               context,
-               AppDatabase::class.java,
-               "seeding_database"
-           ).build()
-       }
-       
-       @Provides
-       fun provideSeedDao(database: AppDatabase): SeedDao {
-           return database.seedDao()
-       }
-   }
-   ```
 
-#### 6.5.2 API集成
-
-1. **定义API接口**：使用Retrofit
+3. **同步服务**：创建同步服务处理数据同步
    ```kotlin
-   interface ApiService {
-       @GET("seeds")
-       suspend fun getSeeds(): List<SeedDto>
-       
-       @POST("seeds")
-       suspend fun createSeed(@Body seed: SeedRequest): SeedResponse
-       
-       @PUT("seeds/{id}")
-       suspend fun updateSeed(
-           @Path("id") id: String,
-           @Body seed: SeedRequest
-       ): SeedResponse
-       
-       @DELETE("seeds/{id}")
-       suspend fun deleteSeed(@Path("id") id: String)
-   }
-   ```
-
-2. **创建API模块**：
-   ```kotlin
-   @Module
-   @InstallIn(SingletonComponent::class)
-   object NetworkModule {
-       @Provides
-       @Singleton
-       fun provideOkHttpClient(): OkHttpClient {
-           return OkHttpClient.Builder()
-               .addInterceptor(HttpLoggingInterceptor().apply {
-                   level = HttpLoggingInterceptor.Level.BODY
-               })
-               .connectTimeout(30, TimeUnit.SECONDS)
-               .readTimeout(30, TimeUnit.SECONDS)
-               .build()
-       }
-       
-       @Provides
-       @Singleton
-       fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-           return Retrofit.Builder()
-               .baseUrl("https://api.example.com/")
-               .client(okHttpClient)
-               .addConverterFactory(GsonConverterFactory.create())
-               .build()
-       }
-       
-       @Provides
-       @Singleton
-       fun provideApiService(retrofit: Retrofit): ApiService {
-           return retrofit.create(ApiService::class.java)
-       }
-   }
-   ```
-
-3. **实现仓库层**：
-   ```kotlin
-   class SeedRepositoryImpl @Inject constructor(
-       private val api: ApiService,
-       private val seedDao: SeedDao
-   ) : SeedRepository {
-       override fun getSeeds(): Flow<List<Seed>> {
-           return seedDao.getAllSeeds()
-               .map { entities ->
-                   entities.map { it.toDomain() }
-               }
-       }
-       
-       override suspend fun refreshSeeds() {
+   @Singleton
+   class SyncService @Inject constructor(
+       private val goalRepository: GoalRepository,
+       private val goalApiService: GoalApiService,
+       private val goalDao: GoalDao
+   ) {
+       suspend fun syncGoals(userId: String) {
            try {
-               val remoteSeeds = api.getSeeds()
-               seedDao.insertSeeds(remoteSeeds.map { it.toEntity() })
+               // 获取未同步的本地数据
+               val unsyncedGoals = goalDao.getUnsyncedGoals(userId)
+               
+               // 上传未同步数据
+               for (goal in unsyncedGoals) {
+                   // 转换为DTO
+                   val goalDto = goal.toDto()
+                   
+                   // 根据操作类型执行不同API调用
+                   when (/* 根据状态判断操作类型 */) {
+                       // 创建
+                       // 更新
+                       // 删除
+                   }
+                   
+                   // 更新同步状态
+                   goalDao.updateSyncStatus(goal.goalId, true)
+               }
+               
+               // 获取云端数据并更新本地
+               val remoteGoals = goalApiService.getGoals(userId)
+               // 更新本地数据库
            } catch (e: Exception) {
-               // 处理错误，可能回退到缓存数据
+               // 处理同步错误
+               Log.e("SyncService", "同步失败: ${e.message}", e)
            }
        }
-       
-       // 其他方法
    }
    ```
 
-### 6.6 调试与测试
-
-#### 6.6.1 调试技巧
-
-1. **Compose调试**：启用Compose调试器
+4. **网络状态监听**：添加网络状态监听以自动触发同步
    ```kotlin
-   // 在onCreate中添加
-   if (BuildConfig.DEBUG) {
-       Compose.setViewCompositionStrategy(DebugCompositionStrategy())
-   }
-   ```
-
-2. **添加日志**：使用自定义日志工具类
-   ```kotlin
-   object Logger {
-       private const val TAG = "SeedingApp"
+   @Singleton
+   class NetworkMonitor @Inject constructor(
+       @ApplicationContext private val context: Context
+   ) {
+       private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
        
-       fun d(message: String) {
-           if (BuildConfig.DEBUG) {
-               Log.d(TAG, message)
+       fun isNetworkAvailable(): Boolean {
+           val network = connectivityManager.activeNetwork ?: return false
+           val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+           return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+       }
+       
+       fun observeNetworkState(): Flow<Boolean> {
+           return callbackFlow {
+               // 实现网络状态监听
            }
        }
-       
-       fun e(message: String, throwable: Throwable? = null) {
-           Log.e(TAG, message, throwable)
-       }
    }
    ```
 
-3. **导航调试**：打印导航状态
+5. **工作管理器集成**：使用WorkManager安排定期同步
    ```kotlin
-   val navBackStackEntry by navController.currentBackStackEntryAsState()
-   
-   LaunchedEffect(navBackStackEntry) {
-       Logger.d("导航到: ${navBackStackEntry?.destination?.route}")
-   }
-   ```
-
-#### 6.6.2 编写测试
-
-1. **ViewModel测试**：
-   ```kotlin
-   @RunWith(JUnit4::class)
-   class SettingsViewModelTest {
-       @get:Rule
-       val instantTaskExecutorRule = InstantTaskExecutorRule()
-       
-       private val testDispatcher = TestCoroutineDispatcher()
-       
-       @ExperimentalCoroutinesApi
-       @Before
-       fun setup() {
-           Dispatchers.setMain(testDispatcher)
-       }
-       
-       @ExperimentalCoroutinesApi
-       @After
-       fun tearDown() {
-           Dispatchers.resetMain()
-           testDispatcher.cleanupTestCoroutines()
-       }
-       
-       @Test
-       fun `when updateLanguage called, then uiState updated`() = runBlockingTest {
-           // Given
-           val application = mock(Application::class.java)
-           val viewModel = SettingsViewModel(application)
-           
-           // When
-           viewModel.updateLanguage("English")
-           
-           // Then
-           val uiState = viewModel.uiState.value
-           assertEquals("English", uiState.language)
-       }
-   }
-   ```
-
-2. **Compose UI测试**：
-   ```kotlin
-   @RunWith(AndroidJUnit4::class)
-   class SettingsScreenTest {
-       @get:Rule
-       val composeTestRule = createComposeRule()
-       
-       @Test
-       fun settingsScreen_displaysCorrectThemes() {
-           // Given
-           val navController = TestNavHostController(
-               ApplicationProvider.getApplicationContext()
-           )
-           
-           // When
-           composeTestRule.setContent {
-               SettingsScreen(navController = navController)
+   @HiltWorker
+   class SyncWorker @AssistedInject constructor(
+       @Assisted context: Context,
+       @Assisted params: WorkerParameters,
+       private val syncService: SyncService,
+       private val userRepository: UserRepository
+   ) : CoroutineWorker(context, params) {
+       override suspend fun doWork(): Result {
+           return try {
+               val currentUser = userRepository.getCurrentUser().first()
+               if (currentUser != null) {
+                   syncService.syncGoals(currentUser.id)
+                   Result.success()
+               } else {
+                   Result.failure()
+               }
+           } catch (e: Exception) {
+               Log.e("SyncWorker", "同步失败: ${e.message}", e)
+               Result.retry()
            }
-           
-           // Then
-           composeTestRule.onNodeWithText("DEFAULT").assertIsDisplayed()
-           composeTestRule.onNodeWithText("NATURE").assertIsDisplayed()
-           // 其他断言
        }
    }
    ```
-
-## 7. 常见问题与解决方案
-
-### 7.1 主题或语言切换不生效
-
-- **问题**：更改主题或语言后，UI没有更新
-- **原因**：
-  1. 未正确更新全局状态
-  2. UI组件未订阅状态变化
-  3. 资源未正确加载
-- **解决方案**：
-  1. 确保调用`AppThemeManager.updateThemeType`或`LanguageManager.switchLanguage`
-  2. 检查组件是否正确引用`LocalLanguageState.current`或`MaterialTheme`
-  3. 显式触发资源重载：`context.resources.updateConfiguration(...)`
-  4. 确保在`SettingsViewModel`中同时更新ViewModel状态和全局状态
-
-### 7.2 页面导航问题
-
-- **问题**：导航到新页面后，返回键行为异常
-- **原因**：
-  1. 导航参数配置错误
-  2. `popUpTo`和`inclusive`设置不当
-  3. 路由名称不匹配
-- **解决方案**：
-  1. 检查`NavHost`和`composable`的路由定义
-  2. 确保`popUpTo`正确指向目标路由
-  3. 使用`launchSingleTop = true`避免页面堆叠
-  4. 调试BackStack：
-  ```kotlin
-  LaunchedEffect(navController) {
-      navController.currentBackStackEntryFlow.collect { entry ->
-          Logger.d("当前路由: ${entry.destination.route}, 参数: ${entry.arguments}")
-      }
-  }
-  ```
-
-### 7.3 性能优化
-
-- **问题**：滚动列表或复杂UI卡顿
-- **原因**：
-  1. Composable函数重组过于频繁
-  2. 高开销操作在组合阶段执行
-  3. 未正确使用`LazyColumn`或`key`
-- **解决方案**：
-  1. 使用`remember`和`derivedStateOf`减少重组
-  ```kotlin
-  val sortedItems by remember(items) {
-      derivedStateOf { items.sortedBy { it.timestamp } }
-  }
-  ```
-  2. 将高开销操作移至`LaunchedEffect`
-  ```kotlin
-  LaunchedEffect(key1) {
-      // 执行高开销操作
-  }
-  ```
-  3. 为列表项提供稳定的key
-  ```kotlin
-  LazyColumn {
-      items(
-          items = uiState.items,
-          key = { it.id } // 稳定的唯一标识符
-      ) { item ->
-          ItemComponent(item)
-      }
-  }
-  ```
-  4. 使用`Modifier.composed`创建自定义修饰符
-  ```kotlin
-  fun Modifier.shimmerEffect(): Modifier = composed {
-      // 实现闪烁效果
-  }
-  ```
 
 ## 8. 未来扩展方向
 
-### 8.1 数据持久化完善
-- 实现Room数据库全面集成
-- 添加数据同步机制与云端
-- 实现离线优先策略
+### 8.1 云端同步与离线功能
 
-### 8.2 高级主题系统
-- 支持用户自定义颜色
-- 实现动态主题（基于时间或位置）
-- 添加Material You动态颜色支持
+- **实现API服务**：创建RESTful API或GraphQL服务
+- **同步策略**：实现增量同步和冲突解决
+- **离线模式**：支持无网络环境下的正常使用
+- **批量同步**：批量处理积累的未同步数据
+- **同步历史**：提供数据同步历史记录
+- **定时同步**：使用WorkManager实现定期后台同步
 
-### 8.3 动画与交互
-- 添加页面转场动画
-- 实现手势操作
-- 添加微交互反馈
+### 8.2 多用户支持与用户认证
 
-### 8.4 可访问性增强
-- 改进屏幕阅读器支持
-- 添加高对比度模式
-- 支持动态字体大小
+- **用户注册和登录**：实现完整的用户认证流程
+- **OAuth集成**：支持第三方账号登录
+- **会话管理**：实现安全的用户会话管理
+- **权限系统**：实现基于角色的权限控制
+- **多设备同步**：支持用户在多设备间同步数据
 
-### 8.5 性能监控
-- 集成性能监控工具
-- 优化启动时间
-- 减少内存使用
+### 8.3 高级数据分析与统计
+
+- **数据可视化**：实现用户行为和目标完成情况的图表展示
+- **趋势分析**：展示用户习惯和行为的变化趋势
+- **成就系统**：根据用户行为和目标完成情况颁发成就
+- **个性化建议**：基于历史数据提供个性化建议
+- **导出功能**：支持数据导出为多种格式
+
+### 8.4 性能优化与安全增强
+
+- **数据库性能**：实现更高效的查询和索引
+- **数据加密**：对敏感数据进行加密存储
+- **二进制大对象优化**：优化大文件的存储和传输
+- **批量操作**：支持高效的批量数据操作
+- **安全日志**：实现详细的安全审计日志
+
+### 8.5 扩展社交功能
+
+- **好友系统**：实现用户之间的好友关系
+- **分享功能**：支持目标和成就的社交分享
+- **协作目标**：支持多人参与的协作目标
+- **评论系统**：允许好友对目标进行评论和鼓励
+- **社区功能**：建立用户兴趣社区
 
 ---
 
-本文档详细介绍了Seeding应用的开发指南，包括主题和语言系统实现、组件开发、页面导航以及常见问题解决方案。开发者可参考本文档进行功能扩展和维护。如有问题，请联系项目维护者。 
+本文档详细介绍了Seeding应用的开发指南，包括主题和语言系统实现、数据库和后端架构，以及未来扩展方向。开发者可参考本文档进行功能扩展和维护。如有问题，请联系项目维护者。 
