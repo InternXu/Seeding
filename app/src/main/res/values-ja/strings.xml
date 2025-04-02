@@ -13,6 +13,7 @@
     <string name="search">検索</string>
     <string name="add_action">アイテム追加</string>
     <string name="edit_goals">目標編集</string>
+    <string name="close">閉じる</string>
     
     <!-- ナビゲーション -->
     <string name="nav_action">種まき</string>
@@ -21,6 +22,13 @@
     <string name="nav_profile">会員情報</string>
     <string name="nav_settings">設定</string>
     <string name="nav_store">プラグイン</string>
+    
+    <!-- 日付関連 -->
+    <string name="today">今日</string>
+    <string name="yesterday">昨日</string>
+    <string name="day_count">(%1$d)</string>
+    <string name="fold">折りたたむ</string>
+    <string name="expand">展開する</string>
     
     <!-- ログイン＆登録 -->
     <string name="login">ログイン</string>
@@ -55,6 +63,64 @@
     <string name="select_seed">シード種類を選択</string>
     <string name="select_goal">関連目標（任意）</string>
     <string name="create_promise">約束を作成</string>
+    <string name="action_history">行動履歴</string>
+    <string name="no_actions">記録がありません</string>
+    <string name="my_commitments">私の約束</string>
+    <string name="commitment_pending">待機中</string>
+    <string name="commitment_fulfilled">達成済み</string>
+    <string name="commitment_unfulfilled">未達成</string>
+    <string name="commitment_expired">期限切れ</string>
+    <string name="commitment_remaining_time">残り時間: %1$s</string>
+    <string name="fulfill_commitment">約束を達成</string>
+    <string name="action_content">行動内容</string>
+    <string name="action_type">行動タイプ</string>
+    <string name="neutral_action">中立アクション</string>
+    <string name="related_seeds">関連シード</string>
+    <string name="related_goals">関連目標</string>
+    <string name="add_commitment">約束を追加</string>
+    <string name="edit_commitment">約束を編集</string>
+    <string name="commitment_content">約束内容</string>
+    <string name="commitment_time_frame">期限</string>
+    <string name="action_detail">行動詳細</string>
+    <string name="creation_time">作成日時</string>
+    <string name="commitment">約束</string>
+    <string name="has_commitment">約束あり</string>
+    <string name="positive">ポジティブ</string>
+    <string name="negative">ネガティブ</string>
+    <string name="select_seeds">シードを選択</string>
+    <string name="select_goals">目標を選択</string>
+    <string name="make_commitment">約束を作成</string>
+    <string name="commitment_content_hint">約束内容を入力してください...</string>
+    <string name="action_content_hint">行動内容を入力してください...</string>
+    <string name="select_time_frame">期限を選択</string>
+    
+    <!-- 約束関連 -->
+    <string name="your_negative_action">あなたのネガティブな行動:</string>
+    <string name="select_commitment_timeframe">約束期間を選択してください</string>
+    <string name="select_time">時間を選択</string>
+    <string name="commitment_prefix">%1$s以内に達成することを約束します：</string>
+    <string name="please_enter_commitment">約束内容を入力してください</string>
+    
+    <!-- 時間枠 -->
+    <string name="minutes_3">3分</string>
+    <string name="minutes_15">15分</string>
+    <string name="minutes_30">30分</string>
+    <string name="hours_1">1時間</string>
+    <string name="hours_2">2時間</string>
+    <string name="hours_3">3時間</string>
+    <string name="days_1">1日</string>
+    <string name="days_3">3日</string>
+    <string name="days_7">7日</string>
+    <string name="days_30">30日</string>
+    
+    <!-- 時間形式 -->
+    <string name="days_hours_format">%1$d日%2$d時間</string>
+    <string name="hours_minutes_format">%1$d時間%2$d分</string>
+    <string name="minutes_format">%1$d分</string>
+    <string name="hours_minutes_seconds_format">%1$d時間%2$d分%3$d秒</string>
+    <string name="minutes_seconds_format">%1$d分%2$d秒</string>
+    <string name="seconds_format">%1$d秒</string>
+    <string name="commitment_completed">約束を達成しました</string>
     
     <!-- 目標画面 -->
     <string name="goal_title">マイ目標</string>

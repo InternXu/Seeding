@@ -64,6 +64,8 @@ import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.Grass
 import androidx.compose.material.icons.outlined.Spa
 import androidx.compose.material.icons.outlined.Task
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.clickable
 import com.example.seeding.ui.theme.AppThemeManager
@@ -72,6 +74,18 @@ import com.example.seeding.util.ProvideLanguageSettings
 import androidx.compose.runtime.collectAsState
 import com.example.seeding.util.LocalLanguageState
 import androidx.hilt.navigation.compose.hiltViewModel
+import timber.log.Timber
+
+// 创建一个全局搜索事件通道
+object SearchEvents {
+    private val _searchTrigger = MutableSharedFlow<Long>()
+    val searchTrigger: SharedFlow<Long> = _searchTrigger
+    
+    suspend fun triggerSearch() {
+        _searchTrigger.emit(System.currentTimeMillis())
+        Timber.d("搜索事件已触发，时间戳: ${System.currentTimeMillis()}")
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -283,7 +297,12 @@ fun SeedingApp(
                                             ActionButton(
                                                 icon = Icons.Default.Search,
                                                 contentDescription = stringResource(R.string.search),
-                                                onClick = { /* TODO: 搜索功能 */ }
+                                                onClick = {
+                                                    // 使用全局事件通道触发搜索
+                                                    scope.launch {
+                                                        SearchEvents.triggerSearch()
+                                                    }
+                                                }
                                             )
                                         }
                                         Screen.Goal.route -> {
@@ -324,13 +343,18 @@ fun SeedingApp(
                                             label = { Text(item.title) },
                                             selected = selectedItemIndex == index,
                                             onClick = {
-                                                selectedItemIndex = index
-                                                navController.navigate(item.route) {
-                                                    // 修改导航逻辑，设置为顶级导航目标，而不是返回到播种页
-                                                    popUpTo(navController.graph.startDestinationId) {
-                                                        inclusive = true  // 包括startDestination也弹出
+                                                if (selectedItemIndex != index) {
+                                                    selectedItemIndex = index
+                                                    navController.navigate(item.route) {
+                                                        // 保持只有一个目标实例在回退栈中
+                                                        popUpTo(navController.graph.startDestinationId) {
+                                                            saveState = true
+                                                        }
+                                                        // 避免重复创建相同目标的多个实例
+                                                        launchSingleTop = true
+                                                        // 恢复之前的状态
+                                                        restoreState = true
                                                     }
-                                                    launchSingleTop = true
                                                 }
                                             }
                                         )
@@ -346,7 +370,7 @@ fun SeedingApp(
                         ) {
                             SeedingNavigation(
                                 navController = navController,
-                                startDestination = Screen.Login.route
+                                startDestination = Screen.Action.route
                             )
                         }
                     }

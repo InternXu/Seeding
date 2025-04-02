@@ -78,8 +78,8 @@ class MainActivity : ComponentActivity() {
         // 加载语言设置
         LanguageManager.loadLanguageSettings(this)
         
-        // 加载主题设置（如果有的话）
-        // AppThemeManager.loadSettings(this)
+        // 加载主题设置
+        AppThemeManager.loadThemeSettings(this)
     }
     
     /**

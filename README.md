@@ -15,6 +15,7 @@ Seeding是一款基于Android平台的习惯培养应用，帮助用户将良好
 - **数据持久化**：Room
 - **异步处理**：Kotlin Coroutines & Flow
 - **导航**：Jetpack Navigation Compose
+- **日志**：Timber
 - **Splash Screen API**：应用启动画面
 
 #### 项目结构
@@ -27,20 +28,36 @@ app/src/main/java/com/example/seeding/
 │   │   ├── entity/            # 数据库实体
 │   │   ├── SeedingDatabase.kt # 数据库定义
 │   │   └── Converters.kt      # 类型转换器
+│   ├── model/                 # 领域模型
+│   │   ├── Action.kt          # 行为模型
+│   │   ├── Commitment.kt      # 承诺模型
+│   │   ├── CommitmentStatus.kt # 承诺状态枚举
+│   │   ├── CommitmentTimeFrames.kt # 承诺时间框架
+│   │   ├── ActionType.kt      # 行为类型枚举
+│   │   └── ...                # 其他模型
 │   └── repository/            # 仓库实现
 ├── di/                        # 依赖注入
 │   ├── AppModule.kt           # 应用级别模块
 │   ├── DatabaseModule.kt      # 数据库模块
 │   └── RepositoryModule.kt    # 仓库模块
-├── domain/                    # 领域层
-│   ├── model/                 # 领域模型
-│   └── repository/            # 仓库接口
 ├── ui/                        # 界面层
 │   ├── components/            # 可复用组件
+│   ├── navigation/            # 导航组件
+│   │   └── SeedingNavigation.kt # 导航配置
 │   ├── screens/               # 应用页面
+│   │   ├── action/            # 播种页面
+│   │   ├── goal/              # 目标页面
+│   │   ├── harvest/           # 收获页面
+│   │   ├── login/             # 登录页面
+│   │   ├── profile/           # 个人信息页面
+│   │   └── settings/          # 设置页面
 │   ├── theme/                 # 主题定义
-│   └── viewmodels/            # 视图模型
+│   ├── SearchEvents.kt        # 全局搜索事件
+│   └── SeedingApp.kt          # 应用组件
 ├── util/                      # 工具类
+│   ├── DateUtils.kt           # 日期工具
+│   ├── LanguageManager.kt     # 多语言管理
+│   └── SeedUtils.kt           # 种子工具类
 ├── SeedingActivity.kt         # 主活动
 └── SeedingApplication.kt      # 应用类
 ```
@@ -52,38 +69,57 @@ app/src/main/java/com/example/seeding/
 1. **表现层(UI)**：
    - Compose UI组件
    - ViewModel处理UI逻辑和状态
+   - 事件驱动型界面状态管理
 
 2. **领域层(Domain)**：
    - 业务逻辑和规则
-   - 仓库接口定义
-   - 领域模型
+   - 数据模型
+   - 仓库接口
 
 3. **数据层(Data)**：
    - 仓库接口的实现
    - 数据源(本地数据库)
    - 数据映射器
 
-#### 数据库设计
+#### 数据模型设计
 
-应用使用Room实现本地数据库，主要实体包括：
+应用主要模型包括：
 
-1. **用户(User)**：
+1. **行为(Action)**：
    ```kotlin
-   @Entity(tableName = "users")
-   data class UserEntity(
-       @PrimaryKey val userId: String,
-       val username: String,
-       val email: String,
-       val avatarUrl: String?,
-       val createdAt: Long
+   data class Action(
+       val actionId: String,
+       val userId: String,
+       val content: String,
+       val timestamp: Long,
+       val type: ActionType,
+       val seedIds: List<Int>,
+       val goalIds: List<String> = emptyList(),
+       val hasCommitment: Boolean = false,
+       var tag: Any? = null
    )
    ```
 
-2. **种子(Seed)**：
+2. **承诺(Commitment)**：
    ```kotlin
-   @Entity(tableName = "seeds")
-   data class SeedEntity(
-       @PrimaryKey val seedId: Int,
+   data class Commitment(
+       val commitmentId: String,
+       val actionId: String,
+       val userId: String,
+       val content: String,
+       val seedIds: List<Int>,
+       val timestamp: Long,
+       val deadline: Long,
+       val timeFrame: Int,
+       val status: CommitmentStatus,
+       val completedAt: Long? = null
+   )
+   ```
+
+3. **种子(Seed)**：
+   ```kotlin
+   data class Seed(
+       val seedId: Int,
        val name: String,
        val description: String,
        val category: String,
@@ -91,119 +127,67 @@ app/src/main/java/com/example/seeding/
    )
    ```
 
-3. **目标(Goal)**：
+4. **目标(Goal)**：
    ```kotlin
-   @Entity(tableName = "goals")
-   data class GoalEntity(
-       @PrimaryKey val goalId: String,
+   data class Goal(
+       val goalId: String,
        val userId: String,
        val title: String,
        val description: String,
        val seedIds: List<Int>,
        val deadline: Long?,
        val createdAt: Long,
-       val status: GoalStatus,
-       val isSynced: Boolean = false
+       val status: GoalStatus
    )
    ```
 
-#### 数据访问层
+#### 导航系统
 
-每个实体都有对应的DAO接口，定义了数据操作方法：
+应用使用Jetpack Navigation Compose实现页面导航和动画过渡：
 
-1. **UserDao**：
-   ```kotlin
-   @Dao
-   interface UserDao {
-       @Query("SELECT * FROM users WHERE userId = :userId")
-       suspend fun getUserById(userId: String): UserEntity?
-       
-       @Insert(onConflict = OnConflictStrategy.REPLACE)
-       suspend fun insertUser(user: UserEntity)
-       
-       // 其他查询方法...
-   }
-   ```
+```kotlin
+sealed class Screen(val route: String) {
+    object Login : Screen("login")
+    object Register : Screen("register")
+    object ForgotPassword : Screen("forgot_password")
+    object Action : Screen("action")
+    object Goal : Screen("goal")
+    object Harvest : Screen("harvest")
+    object Profile : Screen("profile")
+    object Settings : Screen("settings")
+    object Store : Screen("store")
+    // 设置子页面和详情页面...
+}
 
-2. **SeedDao**：
-   ```kotlin
-   @Dao
-   interface SeedDao {
-       @Query("SELECT * FROM seeds")
-       fun getAllSeeds(): Flow<List<SeedEntity>>
-       
-       @Query("SELECT * FROM seeds WHERE seedId IN (:seedIds)")
-       suspend fun getSeedsByIds(seedIds: List<Int>): List<SeedEntity>
-       
-       @Insert(onConflict = OnConflictStrategy.REPLACE)
-       suspend fun insertSeeds(seeds: List<SeedEntity>)
-       
-       // 其他查询方法...
-   }
-   ```
-
-3. **GoalDao**：
-   ```kotlin
-   @Dao
-   interface GoalDao {
-       @Query("SELECT * FROM goals WHERE userId = :userId")
-       fun getGoalsByUserId(userId: String): Flow<List<GoalEntity>>
-       
-       @Insert(onConflict = OnConflictStrategy.REPLACE)
-       suspend fun insertGoal(goal: GoalEntity): Long
-       
-       @Update
-       suspend fun updateGoal(goal: GoalEntity)
-       
-       @Delete
-       suspend fun deleteGoal(goal: GoalEntity)
-       
-       // 其他查询方法...
-   }
-   ```
-
-#### 仓库层
-
-仓库层封装数据操作逻辑，为业务层提供简洁接口：
-
-1. **UserRepository**：
-   ```kotlin
-   interface UserRepository {
-       fun getCurrentUser(): Flow<User?>
-       suspend fun saveUser(user: User)
-       suspend fun getUserById(userId: String): User?
-   }
-   ```
-
-2. **SeedRepository**：
-   ```kotlin
-   interface SeedRepository {
-       fun getAllSeeds(): Flow<List<Seed>>
-       suspend fun getSeedsByIds(seedIds: List<Int>): List<Seed>
-       suspend fun initializeSeeds()
-   }
-   ```
-
-3. **GoalRepository**：
-   ```kotlin
-   interface GoalRepository {
-       fun getGoalsByUserId(userId: String): Flow<List<Goal>>
-       suspend fun getGoalById(goalId: String): Goal?
-       suspend fun saveGoal(goal: Goal): String
-       suspend fun updateGoal(goal: Goal)
-       suspend fun deleteGoal(goal: Goal)
-   }
-   ```
-
-### 功能模块
+@Composable
+fun SeedingNavigation(
+    navController: NavHostController,
+    startDestination: String
+) {
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
+    ) {
+        composable(
+            route = Screen.Login.route,
+            // 定义页面转场动画...
+        ) {
+            LoginScreen(navController = navController)
+        }
+        // 其他页面路由...
+    }
+}
+```
 
 #### 页面结构
 
 应用主要包含以下几个页面：
 
-1. **播种页(SeedingScreen)**：
-   - 展示所有可用的种子(好习惯)
-   - 用户可以选择种子创建新目标
+1. **播种页(ActionScreen)**：
+   - 展示所有行为记录
+   - 承诺管理和跟踪
+   - 按时间分组的行为列表
+   - 搜索功能
 
 2. **目标页(GoalScreen)**：
    - 展示用户当前的目标列表
@@ -214,91 +198,74 @@ app/src/main/java/com/example/seeding/
    - 可视化展示用户进度
 
 4. **设置页(SettingsScreen)**：
-   - 主题切换(默认、自然、深夜、高对比度)
-   - 语言切换(中英日等多语言支持)
-   - 其他应用设置
+   - 主题切换
+   - 语言切换(中英文支持)
+   - 字体大小调整
 
-#### 导航系统
+### 特色功能
 
-应用使用Jetpack Navigation Compose实现页面导航：
+#### 承诺系统
 
-```kotlin
-@Composable
-fun SeedingNavigation(
-    navController: NavHostController,
-    startDestination: String = Screen.Splash.route
-) {
-    NavHost(
-        navController = navController,
-        startDestination = startDestination
-    ) {
-        composable(Screen.Splash.route) {
-            SplashScreen(navController = navController)
-        }
-        composable(Screen.Home.route) {
-            HomeScreen(navController = navController)
-        }
-        // 其他页面路由...
-    }
-}
-```
+Seeding应用的核心功能是承诺系统，帮助用户培养良好习惯：
 
-#### UI组件体系
+1. **承诺创建**：
+   - 用户添加负面行为后触发承诺创建
+   - 设置承诺内容和时间框架(3分钟到3小时)
+   - 将该承诺标记为待完成状态
 
-1. **顶部栏(SeedingTopAppBar)**：
-   - 页面标题
-   - 返回按钮(根据页面)
-   - 菜单操作
+2. **承诺跟踪**：
+   - 实时倒计时显示剩余时间
+   - 进度条指示剩余百分比
+   - 承诺卡片置顶显示提醒用户
 
-2. **底部导航栏(SeedingBottomBar)**：
-   - 四个主页面的导航按钮
-   - 支持选中状态指示
+3. **承诺状态管理**：
+   - PENDING：待完成的承诺
+   - FULFILLED：已履行的承诺
+   - EXPIRED：已过期的承诺
+   - UNFULFILLED：未履行的承诺
 
-3. **目标卡片(GoalCard)**：
-   - 展示目标基本信息
-   - 进度指示器
-   - 操作按钮
+4. **承诺完成机制**：
+   - 用户可在12小时宽限期内完成承诺
+   - 即使状态为EXPIRED，仍可以标记为完成
+   - 自动更新状态和统计数据
 
-4. **种子项(SeedItem)**：
-   - 种子图标
-   - 种子名称和描述
-   - 选择状态
-
-### 工作流
-
-1. **用户登录/注册**：
-   - 当前版本使用本地用户
-   - 未来将支持云端账户
-
-2. **创建目标**：
-   - 浏览种子列表
-   - 选择一个或多个种子
-   - 设置目标标题、描述和期限
-   - 保存目标
-
-3. **目标管理**：
-   - 查看目标列表
-   - 更新目标进度
-   - 编辑或删除目标
-
-4. **查看收获**：
-   - 浏览已完成的目标
-   - 查看统计数据和成就
-   - 分享成果(计划中)
-
-### 多语言与主题
+#### 多语言与主题
 
 应用支持多语言和多主题，通过以下机制实现：
 
 1. **多语言支持**：
-   - 使用资源文件系统
-   - 即时语言切换
-   - 当前支持中文、英文、日文
+   - 使用资源文件存储不同语言字符串
+   - LocalLanguageState实现即时语言切换
+   - 当前支持中文、英文
 
 2. **主题支持**：
-   - 精心设计的颜色系统
-   - 深色模式适配
-   - 4种预设主题
+   - 多种预设主题颜色
+   - 深色/浅色模式自适应
+   - 字体大小可调
+
+3. **动态UI适配**：
+   - ProvideLanguageSettings提供语言上下文
+   - AppThemeManager管理全局主题状态
+   - 响应式UI自动适应主题和语言变化
+
+### 动画与交互
+
+应用通过精心设计的动画和交互提升用户体验：
+
+1. **页面转场动画**：
+   - 主页面之间的水平滑动动画
+   - 抽屉菜单的展开和收缩动画
+   - 登录/注册页面的淡入淡出效果
+
+2. **组件动画**：
+   - 进度条的平滑动画
+   - 状态变化的淡入淡出
+   - 卡片展开/折叠效果
+
+3. **全局导航**：
+   - 底部导航栏实现主页面切换
+   - 抽屉菜单提供辅助功能入口
+   - 自适应返回按钮行为
 
 ### 注意事项
 
@@ -307,6 +274,8 @@ fun SeedingNavigation(
 2. **Compose UI**：使用Compose UI构建，确保使用最新的Material3设计。
 
 3. **数据持久化**：当前使用Room实现本地存储，未来将支持云端同步。
+
+4. **搜索实现**：搜索功能通过SharedFlow实现全局事件通信。
 
 ---
 

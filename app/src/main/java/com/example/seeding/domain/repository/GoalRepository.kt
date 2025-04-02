@@ -14,7 +14,7 @@ interface GoalRepository {
     fun getAllUserGoals(userId: String): Flow<List<Goal>>
     
     /**
-     * 获取目标详情
+     * 根据ID获取目标
      */
     suspend fun getGoalById(goalId: String): Goal?
     
@@ -34,17 +34,22 @@ interface GoalRepository {
     suspend fun completeGoal(goalId: String)
     
     /**
-     * 放弃目标（标记为删除）
+     * 放弃目标
      */
     suspend fun abandonGoal(goalId: String)
     
     /**
-     * 彻底删除目标
+     * 删除目标
      */
     suspend fun deleteGoal(goal: Goal)
     
     /**
-     * 检查并处理过期目标
+     * 检查过期目标
      */
     suspend fun checkForOverdueGoals(userId: String)
+    
+    /**
+     * 获取当前活跃的目标
+     */
+    fun getActiveGoals(userId: String): Flow<List<Goal>>
 } 

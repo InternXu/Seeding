@@ -11,8 +11,9 @@
     <string name="delete">删除</string>
     <string name="edit">编辑</string>
     <string name="search">搜索</string>
-    <string name="add_action">添加事项</string>
+    <string name="add_action">添加行为</string>
     <string name="edit_goals">批量编辑目标</string>
+    <string name="close">关闭</string>
     
     <!-- 导航 -->
     <string name="nav_action">播种</string>
@@ -21,6 +22,13 @@
     <string name="nav_profile">会员信息</string>
     <string name="nav_settings">设置</string>
     <string name="nav_store">插件商店</string>
+    
+    <!-- 日期相关 -->
+    <string name="today">今天</string>
+    <string name="yesterday">昨天</string>
+    <string name="day_count">(%1$d)</string>
+    <string name="fold">收起</string>
+    <string name="expand">展开</string>
     
     <!-- 登录注册 -->
     <string name="login">登录</string>
@@ -72,7 +80,7 @@
     <string name="goal_seed_required">请至少选择一个关联种子</string>
     <string name="deadline_required">请选择截止日期</string>
     <string name="created_time">创建时间</string>
-    <string name="remaining_time">剩余: %1$s</string>
+    <string name="remaining_time">剩余时间: %1$s</string>
     <string name="overdue">已逾期</string>
     <string name="edit_goal">编辑目标</string>
     <string name="delete_goal">删除目标</string>
@@ -125,6 +133,13 @@
     <string name="seed_gratitude_full">感恩</string>
     <string name="seed_surprise_full">提前和惊喜</string>
     
+    <!-- 搜索相关 -->
+    <string name="search_actions">搜索历史行为</string>
+    <string name="search_hint">输入关键字搜索</string>
+    <string name="search_results">找到 %1$d 条结果</string>
+    <string name="no_search_results">未找到匹配结果</string>
+    <string name="commitment_unfulfilled">未履行</string>
+    
     <!-- 设置 -->
     <string name="settings_title">设置</string>
     <string name="language">语言</string>
@@ -168,4 +183,66 @@
     <string name="complete_goal_warning">您确定要将此目标标记为已完成吗？此操作无法撤销。</string>
     <string name="enter_edit_mode">进入编辑模式</string>
     <string name="exit_edit_mode">退出编辑模式</string>
+    
+    <string name="action_history">行为历史</string>
+    <string name="no_actions">暂无行为记录</string>
+    <string name="my_commitments">我的承诺</string>
+    <string name="commitment_pending">待履行</string>
+    <string name="commitment_fulfilled">已履行</string>
+    <string name="commitment_expired">已过期</string>
+    <string name="commitment_remaining_time">剩余时间: %1$s</string>
+    <string name="fulfill_commitment">完成承诺</string>
+    <string name="commitment_completed">我已完成承诺</string>
+    <string name="action_content">行为内容</string>
+    <string name="action_type">行为类型</string>
+    <string name="neutral_action">中性行为</string>
+    <string name="related_seeds">相关种子</string>
+    <string name="related_goals">相关目标</string>
+    <string name="add_commitment">添加承诺</string>
+    <string name="edit_commitment">编辑承诺</string>
+    <string name="commitment_content">承诺内容</string>
+    <string name="commitment_time_frame">时间期限</string>
+    <string name="days_1">1天</string>
+    <string name="days_3">3天</string>
+    <string name="days_7">7天</string>
+    <string name="days_30">30天</string>
+    
+    <!-- 行为相关 -->
+    <string name="action_detail">行为详情</string>
+    <string name="creation_time">创建时间</string>
+    <string name="commitment">承诺</string>
+    <string name="has_commitment">有承诺</string>
+    <string name="positive">正面</string>
+    <string name="negative">负面</string>
+    <string name="select_seeds">选择种子</string>
+    <string name="select_goals">选择目标</string>
+    <string name="make_commitment">创建承诺</string>
+    <string name="commitment_content_hint">输入您的承诺内容...</string>
+    <string name="action_content_hint">请描述您的行为...</string>
+    <string name="select_time_frame">选择时间期限</string>
+    <string name="commitment_prefix">我承诺在%1$s内做到：</string>
+    <string name="please_enter_commitment">请输入承诺内容</string>
+    
+    <!-- Time frames -->
+    <string name="minutes_3">3分钟</string>
+    <string name="minutes_15">15分钟</string>
+    <string name="minutes_30">30分钟</string>
+    <string name="hours_1">1小时</string>
+    <string name="hours_2">2小时</string>
+    <string name="hours_3">3小时</string>
+    
+    <!-- 时间格式化 -->
+    <string name="days_hours_format">%1$d天%2$d小时</string>
+    <string name="hours_minutes_format">%1$d小时%2$d分钟</string>
+    <string name="minutes_format">%1$d分钟</string>
+    <string name="hours_minutes_seconds_format">%1$d小时%2$d分钟%3$d秒</string>
+    <string name="minutes_seconds_format">%1$d分钟%2$d秒</string>
+    <string name="seconds_format">%1$d秒</string>
+    
+    <!-- 承诺相关 -->
+    <string name="your_negative_action">您的负面行为:</string>
+    <string name="select_commitment_timeframe">请选择承诺期限</string>
+    <string name="select_time">选择时间</string>
+    <string name="commitment_fulfilled_full">承诺已履行</string>
+    <string name="commitment_unfulfilled_full">承诺未履行</string>
 </resources>

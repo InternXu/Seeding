@@ -58,6 +58,8 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(themeType = themeType) }
         // 立即应用主题变更
         AppThemeManager.updateThemeType(themeType)
+        // 保存主题设置
+        AppThemeManager.saveThemeSettings(application)
     }
     
     // 更新深色模式
@@ -65,6 +67,8 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(isDarkMode = isDarkMode) }
         // 立即应用深色模式变更
         AppThemeManager.updateDarkMode(isDarkMode)
+        // 保存主题设置
+        AppThemeManager.saveThemeSettings(application)
     }
     
     // 更新字体大小
@@ -72,6 +76,8 @@ class SettingsViewModel @Inject constructor(
         _uiState.update { it.copy(fontSize = fontSize) }
         // 立即应用字体大小变更
         AppThemeManager.updateFontSize(fontSize)
+        // 保存主题设置
+        AppThemeManager.saveThemeSettings(application)
     }
     
     // 清除错误消息

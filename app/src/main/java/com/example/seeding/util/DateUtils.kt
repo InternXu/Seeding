@@ -1,68 +1,170 @@
 package com.example.seeding.util
 
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.seeding.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+/**
+ * 日期工具类
+ */
 object DateUtils {
     // 日期格式化
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
     private val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     
     /**
-     * 格式化日期为字符串(yyyy-MM-dd)
+     * 格式化日期为标准格式
      */
     fun formatDate(timestamp: Long): String {
-        return dateFormat.format(Date(timestamp))
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return sdf.format(Date(timestamp))
     }
     
     /**
-     * 格式化日期时间为字符串(yyyy-MM-dd HH:mm)
+     * 格式化日期时间为标准格式
      */
     fun formatDateTime(timestamp: Long): String {
-        return dateTimeFormat.format(Date(timestamp))
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+        return sdf.format(Date(timestamp))
     }
     
     /**
-     * 计算两个时间戳之间的时间差，格式化为易读的字符串
-     * 如：2天3小时、5小时30分钟
+     * 格式化倒计时时间
      */
-    fun formatTimeDifference(startTime: Long, endTime: Long): String {
-        val diff = endTime - startTime
+    fun formatCountdownTime(millisRemaining: Long): String {
+        if (millisRemaining <= 0) return "00:00" // 已过期
         
-        if (diff <= 0) return "0分钟"
-        
-        val days = TimeUnit.MILLISECONDS.toDays(diff)
-        val hours = TimeUnit.MILLISECONDS.toHours(diff) % 24
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
+        val hours = TimeUnit.MILLISECONDS.toHours(millisRemaining)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millisRemaining) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(millisRemaining) % 60
         
         return when {
-            days > 0 -> {
-                if (hours > 0) "$days 天 $hours 小时" else "$days 天"
-            }
-            hours > 0 -> {
-                if (minutes > 0) "$hours 小时 $minutes 分钟" else "$hours 小时"
-            }
-            else -> "$minutes 分钟"
+            hours > 0 -> String.format("%02d:%02d:%02d", hours, minutes, seconds)
+            else -> String.format("%02d:%02d", minutes, seconds)
         }
     }
     
     /**
-     * 计算截止日期剩余时间
+     * 获取剩余时间的友好显示（非Composable环境使用）
      */
     fun getRemainingTime(deadline: Long): String {
-        val currentTime = System.currentTimeMillis()
-        return if (deadline > currentTime) {
-            formatTimeDifference(currentTime, deadline)
-        } else {
-            "已逾期"
+        val now = System.currentTimeMillis()
+        if (deadline <= now) return "已过期" // 已过期
+        
+        val remainingMillis = deadline - now
+        val days = TimeUnit.MILLISECONDS.toDays(remainingMillis)
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis) % 24
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        
+        return when {
+            days > 0 -> "${days}天${hours}小时"
+            hours > 0 -> "${hours}小时${minutes}分钟"
+            else -> "${minutes}分钟"
         }
     }
     
     /**
-     * 检查是否已经过期
+     * 获取剩余时间的友好显示（带Context版本）
+     */
+    fun getRemainingTime(deadline: Long, context: Context): String {
+        val now = System.currentTimeMillis()
+        if (deadline <= now) return context.getString(R.string.overdue)
+        
+        val remainingMillis = deadline - now
+        val days = TimeUnit.MILLISECONDS.toDays(remainingMillis)
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis) % 24
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        
+        return when {
+            days > 0 -> context.getString(R.string.days_hours_format, days, hours)
+            hours > 0 -> context.getString(R.string.hours_minutes_format, hours, minutes)
+            else -> context.getString(R.string.minutes_format, minutes)
+        }
+    }
+    
+    /**
+     * 获取剩余时间的友好显示（Composable环境使用）
+     */
+    @Composable
+    fun getRemainingTimeComposable(deadline: Long): String {
+        val now = System.currentTimeMillis()
+        if (deadline <= now) return stringResource(R.string.overdue)
+        
+        val remainingMillis = deadline - now
+        val days = TimeUnit.MILLISECONDS.toDays(remainingMillis)
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis) % 24
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        
+        return when {
+            days > 0 -> stringResource(R.string.days_hours_format, days, hours)
+            hours > 0 -> stringResource(R.string.hours_minutes_format, hours, minutes)
+            else -> stringResource(R.string.minutes_format, minutes)
+        }
+    }
+    
+    /**
+     * 获取精确到秒的剩余时间友好显示（非Composable环境使用）
+     */
+    fun getRemainingTimeWithSeconds(currentTime: Long, deadline: Long): String {
+        if (deadline <= currentTime) return "已过期" // 已过期
+        
+        val remainingMillis = deadline - currentTime
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMillis) % 60
+        
+        return when {
+            hours > 0 -> "${hours}小时${minutes}分钟${seconds}秒"
+            minutes > 0 -> "${minutes}分钟${seconds}秒"
+            else -> "${seconds}秒"
+        }
+    }
+    
+    /**
+     * 获取精确到秒的剩余时间友好显示（带Context版本）
+     */
+    fun getRemainingTimeWithSeconds(currentTime: Long, deadline: Long, context: Context): String {
+        if (deadline <= currentTime) return context.getString(R.string.overdue)
+        
+        val remainingMillis = deadline - currentTime
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMillis) % 60
+        
+        return when {
+            hours > 0 -> context.getString(R.string.hours_minutes_seconds_format, hours, minutes, seconds)
+            minutes > 0 -> context.getString(R.string.minutes_seconds_format, minutes, seconds)
+            else -> context.getString(R.string.seconds_format, seconds)
+        }
+    }
+    
+    /**
+     * 获取精确到秒的剩余时间友好显示（Composable环境使用）
+     */
+    @Composable
+    fun getRemainingTimeWithSecondsComposable(currentTime: Long, deadline: Long): String {
+        if (deadline <= currentTime) return stringResource(R.string.overdue)
+        
+        val remainingMillis = deadline - currentTime
+        val hours = TimeUnit.MILLISECONDS.toHours(remainingMillis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(remainingMillis) % 60
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(remainingMillis) % 60
+        
+        return when {
+            hours > 0 -> stringResource(R.string.hours_minutes_seconds_format, hours, minutes, seconds)
+            minutes > 0 -> stringResource(R.string.minutes_seconds_format, minutes, seconds)
+            else -> stringResource(R.string.seconds_format, seconds)
+        }
+    }
+    
+    /**
+     * 判断是否已过期
      */
     fun isOverdue(deadline: Long): Boolean {
         return System.currentTimeMillis() > deadline
@@ -101,5 +203,14 @@ object DateUtils {
         } catch (e: Exception) {
             System.currentTimeMillis()
         }
+    }
+    
+    /**
+     * 获取当前日期加上指定天数的时间戳
+     */
+    fun getDatePlusDays(days: Int): Long {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, days)
+        return calendar.timeInMillis
     }
 } 

@@ -24,27 +24,172 @@
 
 关键点是`languageState.forceUpdate`计数器，它确保了语言变化能触发整个UI树的重组。
 
-### 5.3 页面状态保持
+### 5.3 导航系统与页面动画
 
-设置页面使用`remember`和`rememberSaveable`保持状态：
-```kotlin
-var currentPage by remember { mutableStateOf(SettingsPage.MAIN) }
-```
+导航系统基于Jetpack Navigation Compose实现，包含以下核心部分：
 
-页面内部导航使用`LaunchedEffect`同步路由和状态：
-```kotlin
-LaunchedEffect(currentPage) {
-    val targetRoute = when(currentPage) {
-        SettingsPage.MAIN -> Screen.Settings.route
-        SettingsPage.LANGUAGE -> Screen.SettingsLanguage.route
-        SettingsPage.DISPLAY -> Screen.SettingsDisplay.route
-    }
-    
-    // 更新导航状态
-}
-```
+1. **屏幕路由定义**：在`SeedingNavigation.kt`中定义所有页面路由
+   ```kotlin
+   sealed class Screen(val route: String) {
+       object Login : Screen("login")
+       object Register : Screen("register")
+       // ...其他页面
+   }
+   ```
 
-### 5.4 Room数据库集成
+2. **页面转场动画**：为不同类型的页面定义不同的动画效果
+   ```kotlin
+   // 主页面之间的动画
+   when (direction) {
+       NavigationDirection.RIGHT -> slideIntoContainer(
+           towards = AnimatedContentTransitionScope.SlideDirection.Left,
+           animationSpec = tween(ANIM_DURATION)
+       )
+       // ...其他方向
+   }
+   ```
+
+3. **智能导航方向**：通过`determineDirection`函数动态决定导航动画方向
+   ```kotlin
+   private fun determineDirection(sourceRoute: String?, targetRoute: String?): NavigationDirection {
+       // 根据源页面和目标页面确定动画方向
+   }
+   ```
+
+4. **抽屉菜单集成**：在`SeedingApp.kt`中实现抽屉菜单与主导航的协调
+   ```kotlin
+   ModalNavigationDrawer(
+       drawerState = drawerState,
+       gesturesEnabled = drawerGesturesEnabled,
+       // ...其他配置
+   )
+   ```
+
+5. **导航状态保持**：通过`popUpTo`和`saveState`确保页面状态保存
+   ```kotlin
+   navController.navigate(item.route) {
+       popUpTo(navController.graph.startDestinationId) {
+           saveState = true
+       }
+       launchSingleTop = true
+       restoreState = true
+   }
+   ```
+
+### 5.4 承诺系统实现
+
+承诺(Commitment)系统是应用的核心功能，实现方式如下：
+
+1. **数据模型定义**：
+   ```kotlin
+   data class Commitment(
+       val commitmentId: String,
+       val actionId: String,
+       // ...其他属性
+       val status: CommitmentStatus,
+   )
+   
+   enum class CommitmentStatus {
+       PENDING, FULFILLED, EXPIRED, UNFULFILLED
+   }
+   ```
+
+2. **时间框架管理**：通过`CommitmentTimeFrames`类管理承诺时间选项
+   ```kotlin
+   object CommitmentTimeFrames {
+       const val THREE_MINUTES = 3
+       const val FIFTEEN_MINUTES = 15
+       // ...更多时间选项
+       
+       fun calculateDeadline(timeFrame: Int): Long {
+           // 计算截止时间
+       }
+   }
+   ```
+
+3. **实时状态更新**：在`CommitmentCard`中使用协程定时更新状态
+   ```kotlin
+   LaunchedEffect(Unit) {
+       while(true) {
+           currentTimeMillis = System.currentTimeMillis()
+           delay(1000) // 1秒刷新一次
+       }
+   }
+   ```
+
+4. **动态进度显示**：使用动画效果平滑显示进度变化
+   ```kotlin
+   val animatedProgress by animateFloatAsState(
+       targetValue = progress,
+       label = "CommitmentProgressAnimation"
+   )
+   ```
+
+5. **宽限期机制**：允许用户在截止时间后12小时内完成承诺
+   ```kotlin
+   val isWithin12Hours = currentTimeMillis - commitment.deadline < TimeUnit.HOURS.toMillis(12)
+   if (commitment.status == CommitmentStatus.PENDING || isWithin12Hours) {
+       // 显示完成按钮
+   }
+   ```
+
+### 5.5 搜索功能实现
+
+搜索功能通过全局事件流实现：
+
+1. **事件通道定义**：在`SearchEvents`中定义全局搜索触发器
+   ```kotlin
+   object SearchEvents {
+       private val _searchTrigger = MutableSharedFlow<Long>()
+       val searchTrigger: SharedFlow<Long> = _searchTrigger
+       
+       suspend fun triggerSearch() {
+           _searchTrigger.emit(System.currentTimeMillis())
+       }
+   }
+   ```
+
+2. **事件监听**：在`ActionScreen`中监听搜索事件
+   ```kotlin
+   LaunchedEffect(Unit) {
+       SearchEvents.searchTrigger.collect { timestamp ->
+           viewModel.showSearchDialog()
+       }
+   }
+   ```
+
+3. **事件触发**：在顶部应用栏搜索按钮点击时触发搜索
+   ```kotlin
+   ActionButton(
+       icon = Icons.Default.Search,
+       contentDescription = stringResource(R.string.search),
+       onClick = {
+           scope.launch {
+               SearchEvents.triggerSearch()
+           }
+       }
+   )
+   ```
+
+4. **搜索处理**：在`ActionViewModel`中处理搜索逻辑
+   ```kotlin
+   fun performSearch() {
+       // 搜索逻辑实现
+   }
+   ```
+
+5. **搜索结果展示**：在`SearchDialog`中显示搜索结果
+   ```kotlin
+   @Composable
+   fun SearchDialog(
+       isVisible: Boolean,
+       searchKeyword: String,
+       searchResults: List<Action>,
+       // ...其他参数
+   )
+   ```
+
+### 5.6 Room数据库集成
 
 Room数据库集成通过以下步骤实现：
 
@@ -88,28 +233,6 @@ private fun initializeData() {
     }
 })
 ```
-
-### 5.5 实体-模型映射
-
-应用采用了多层架构，不同层使用不同的数据模型：
-1. **实体(Entity)**：数据库层使用，包含持久化相关字段
-2. **领域模型(Model)**：业务逻辑层使用，包含业务相关字段
-3. **UI模型(UiState)**：UI层使用，包含显示相关字段
-
-`EntityMappers`类负责在这些模型之间进行转换：
-```kotlin
-object EntityMappers {
-    // 实体到领域模型的转换
-    fun mapToGoal(entity: GoalEntity): Goal { /* ... */ }
-    
-    // 领域模型到实体的转换
-    fun mapToGoalEntity(model: Goal): GoalEntity { /* ... */ }
-    
-    // 其他转换方法...
-}
-```
-
-这种分层架构确保了关注点分离，使代码更易于测试和维护。
 
 ## 6. 详细开发指南
 
@@ -177,20 +300,60 @@ object EntityMappers {
 
 5. **测试**：确保在不同屏幕尺寸和深色/亮色模式下主题显示正常
 
-#### 6.1.2 主题颜色指南
+### 6.2 新增组件
 
-Material Design 3建议每个主题至少定义以下颜色：
-- **Primary**: 主色，用于主要UI元素
-- **onPrimary**: 在主色上的文本/图标颜色
-- **PrimaryContainer**: 主色容器，用于次要UI元素
-- **onPrimaryContainer**: 在主色容器上的文本/图标颜色
-- **Secondary**: 次色，用于次要UI元素
-- **Surface**: 表面颜色，用于卡片等UI元素
-- **Background**: 背景色
+要添加新组件到应用中，请按照以下步骤：
 
-建议使用Material Theme Builder工具帮助生成完整的颜色方案。
+1. **定义组件**：创建Composable函数作为新组件
+   ```kotlin
+   @Composable
+   fun NewComponent(
+       param1: Type1,
+       param2: Type2,
+       modifier: Modifier = Modifier
+   ) {
+       // 组件实现
+   }
+   ```
 
-### 6.2 新增数据库实体与DAO
+2. **添加样式**：确保组件样式符合项目设计语言
+   ```kotlin
+   Surface(
+       color = MaterialTheme.colorScheme.surface,
+       shape = MaterialTheme.shapes.medium,
+       modifier = modifier
+   ) {
+       // 内容
+   }
+   ```
+
+3. **处理状态**：管理组件内部状态
+   ```kotlin
+   var internalState by remember { mutableStateOf(initialValue) }
+   ```
+
+4. **考虑重用性**：参数设计应该保持组件灵活性
+   ```kotlin
+   // 允许自定义行为
+   onClick: () -> Unit,
+   // 允许自定义内容
+   content: @Composable () -> Unit
+   ```
+
+5. **添加动画**：考虑添加适当的动画提升用户体验
+   ```kotlin
+   AnimatedVisibility(
+       visible = isVisible,
+       enter = fadeIn() + slideInVertically(),
+       exit = fadeOut() + slideOutVertically()
+   ) {
+       // 组件内容
+   }
+   ```
+
+6. **测试**：在不同屏幕尺寸和配置下测试组件行为
+
+### 6.3 新增数据库实体与DAO
 
 要添加新的数据库实体和相应的数据访问对象，请按照以下步骤操作：
 
@@ -325,143 +488,19 @@ Material Design 3建议每个主题至少定义以下颜色：
    abstract fun bindYourRepository(impl: YourRepositoryImpl): YourRepository
    ```
 
-### 6.3 后端与云端集成准备
+### 6.4 添加新功能
 
-当前的架构设计中已经为未来的云端集成做了准备：
+添加新功能到应用时，建议遵循以下步骤：
 
-1. **实体同步标记**：`GoalEntity`中包含`isSynced`字段，用于标记是否已与云端同步
-2. **未同步数据查询**：`GoalDao`中包含获取未同步数据的方法
-   ```kotlin
-   @Query("SELECT * FROM goals WHERE userId = :userId AND isSynced = 0")
-   suspend fun getUnsyncedGoals(userId: String): List<GoalEntity>
-   ```
-3. **数据同步状态更新**：`GoalDao`中包含更新同步状态的方法
-   ```kotlin
-   @Query("UPDATE goals SET isSynced = :synced WHERE goalId = :goalId")
-   suspend fun updateSyncStatus(goalId: String, synced: Boolean)
-   ```
-
-要实现完整的云端集成，需要进一步完成以下步骤：
-
-1. **API服务定义**：在`data/remote`包中定义API接口
-   ```kotlin
-   interface GoalApiService {
-       @GET("goals")
-       suspend fun getGoals(@Query("userId") userId: String): List<GoalDto>
-       
-       @POST("goals")
-       suspend fun createGoal(@Body goal: GoalDto): GoalDto
-       
-       @PUT("goals/{goalId}")
-       suspend fun updateGoal(@Path("goalId") goalId: String, @Body goal: GoalDto): GoalDto
-       
-       @DELETE("goals/{goalId}")
-       suspend fun deleteGoal(@Path("goalId") goalId: String)
-   }
-   ```
-
-2. **数据传输对象**：创建DTO类进行网络通信
-   ```kotlin
-   data class GoalDto(
-       val id: String,
-       val userId: String,
-       val title: String,
-       val description: String,
-       val seedIds: List<Int>,
-       val deadline: Long,
-       val createdAt: Long,
-       val status: String,
-       // 其他字段...
-   )
-   ```
-
-3. **同步服务**：创建同步服务处理数据同步
-   ```kotlin
-   @Singleton
-   class SyncService @Inject constructor(
-       private val goalRepository: GoalRepository,
-       private val goalApiService: GoalApiService,
-       private val goalDao: GoalDao
-   ) {
-       suspend fun syncGoals(userId: String) {
-           try {
-               // 获取未同步的本地数据
-               val unsyncedGoals = goalDao.getUnsyncedGoals(userId)
-               
-               // 上传未同步数据
-               for (goal in unsyncedGoals) {
-                   // 转换为DTO
-                   val goalDto = goal.toDto()
-                   
-                   // 根据操作类型执行不同API调用
-                   when (/* 根据状态判断操作类型 */) {
-                       // 创建
-                       // 更新
-                       // 删除
-                   }
-                   
-                   // 更新同步状态
-                   goalDao.updateSyncStatus(goal.goalId, true)
-               }
-               
-               // 获取云端数据并更新本地
-               val remoteGoals = goalApiService.getGoals(userId)
-               // 更新本地数据库
-           } catch (e: Exception) {
-               // 处理同步错误
-               Log.e("SyncService", "同步失败: ${e.message}", e)
-           }
-       }
-   }
-   ```
-
-4. **网络状态监听**：添加网络状态监听以自动触发同步
-   ```kotlin
-   @Singleton
-   class NetworkMonitor @Inject constructor(
-       @ApplicationContext private val context: Context
-   ) {
-       private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-       
-       fun isNetworkAvailable(): Boolean {
-           val network = connectivityManager.activeNetwork ?: return false
-           val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-           return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-       }
-       
-       fun observeNetworkState(): Flow<Boolean> {
-           return callbackFlow {
-               // 实现网络状态监听
-           }
-       }
-   }
-   ```
-
-5. **工作管理器集成**：使用WorkManager安排定期同步
-   ```kotlin
-   @HiltWorker
-   class SyncWorker @AssistedInject constructor(
-       @Assisted context: Context,
-       @Assisted params: WorkerParameters,
-       private val syncService: SyncService,
-       private val userRepository: UserRepository
-   ) : CoroutineWorker(context, params) {
-       override suspend fun doWork(): Result {
-           return try {
-               val currentUser = userRepository.getCurrentUser().first()
-               if (currentUser != null) {
-                   syncService.syncGoals(currentUser.id)
-                   Result.success()
-               } else {
-                   Result.failure()
-               }
-           } catch (e: Exception) {
-               Log.e("SyncWorker", "同步失败: ${e.message}", e)
-               Result.retry()
-           }
-       }
-   }
-   ```
+1. **定义需求**：明确功能的用户场景和技术要求
+2. **设计数据模型**：设计支持该功能的数据结构
+3. **创建数据层**：实现数据访问和仓库组件
+4. **开发UI组件**：创建功能的用户界面元素
+5. **连接ViewModel**：创建或更新ViewModel处理业务逻辑
+6. **集成导航**：更新导航系统支持新页面
+7. **添加测试**：编写单元测试和UI测试
+8. **本地化**：添加功能的多语言支持
+9. **文档**：更新开发文档反映新功能
 
 ## 8. 未来扩展方向
 
@@ -505,6 +544,15 @@ Material Design 3建议每个主题至少定义以下颜色：
 - **协作目标**：支持多人参与的协作目标
 - **评论系统**：允许好友对目标进行评论和鼓励
 - **社区功能**：建立用户兴趣社区
+
+### 8.6 最新功能与改进
+
+- **承诺系统增强**：添加承诺模板和智能提示
+- **动态页面转场**：实现更平滑的页面过渡动画
+- **多主题支持**：增加更多可选主题
+- **全局搜索改进**：支持多维度复合搜索
+- **批量操作支持**：允许同时处理多个行为或承诺
+- **智能提醒**：基于行为模式提供智能提醒
 
 ---
 

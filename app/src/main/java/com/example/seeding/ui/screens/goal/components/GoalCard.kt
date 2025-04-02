@@ -181,7 +181,7 @@ fun GoalCard(
                             text = if (isOverdue) 
                                 stringResource(R.string.overdue) 
                             else 
-                                stringResource(R.string.remaining_time, DateUtils.getRemainingTime(goal.deadline)),
+                                stringResource(R.string.remaining_time, DateUtils.getRemainingTimeComposable(goal.deadline)),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isOverdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.align(Alignment.End)
@@ -300,7 +300,8 @@ fun GoalCard(
 @Composable
 fun SeedChip(
     seedId: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    useFullName: Boolean = false
 ) {
     // 使用单一普通颜色
     val backgroundColor = MaterialTheme.colorScheme.surfaceVariant
@@ -312,7 +313,11 @@ fun SeedChip(
         modifier = modifier
     ) {
         Text(
-            text = stringResource(SeedUtils.getSeedFullNameResId(seedId)),
+            text = if (useFullName) {
+                stringResource(SeedUtils.getSeedFullNameResId(seedId))
+            } else {
+                stringResource(SeedUtils.getSeedNameResId(seedId))
+            },
             color = contentColor,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)

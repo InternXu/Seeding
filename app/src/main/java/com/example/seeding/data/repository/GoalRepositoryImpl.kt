@@ -68,4 +68,18 @@ class GoalRepositoryImpl @Inject constructor(
             currentTime = currentTime
         )
     }
+
+    /**
+     * 获取当前活跃的目标（未过期，未达成的目标）
+     */
+    override fun getActiveGoals(userId: String): Flow<List<Goal>> {
+        return getAllUserGoals(userId)
+            .map { goals ->
+                goals.filter { goal ->
+                    // 只保留未完成且未过期的目标
+                    (goal.status == GoalStatus.IN_PROGRESS || goal.status == GoalStatus.OVERDUE) &&
+                    goal.deadline > System.currentTimeMillis()
+                }
+            }
+    }
 }

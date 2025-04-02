@@ -1,6 +1,7 @@
 package com.example.seeding.ui.theme
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -35,6 +36,52 @@ object AppThemeManager {
     // 更新字体大小
     fun updateFontSize(fontSize: Float) {
         fontSizeScale = fontSize
+    }
+    
+    /**
+     * 保存主题设置到 SharedPreferences
+     * @param context 上下文
+     */
+    fun saveThemeSettings(context: Context) {
+        val prefs = getSharedPreferences(context)
+        prefs.edit()
+            .putString("theme_type", currentThemeType.name)
+            .putBoolean("dark_mode", isDarkMode)
+            .putFloat("font_size_scale", fontSizeScale)
+            .apply()
+    }
+    
+    /**
+     * 从 SharedPreferences 加载主题设置
+     * @param context 上下文
+     * @return 是否成功加载设置
+     */
+    fun loadThemeSettings(context: Context): Boolean {
+        val prefs = getSharedPreferences(context)
+        
+        // 加载主题类型
+        val themeTypeName = prefs.getString("theme_type", null) ?: return false
+        try {
+            currentThemeType = ThemeType.valueOf(themeTypeName)
+        } catch (e: IllegalArgumentException) {
+            // 如果保存的主题类型无效，使用默认主题
+            currentThemeType = ThemeType.DEFAULT
+        }
+        
+        // 加载深色模式设置
+        isDarkMode = prefs.getBoolean("dark_mode", false)
+        
+        // 加载字体大小设置
+        fontSizeScale = prefs.getFloat("font_size_scale", 1.0f)
+        
+        return true
+    }
+    
+    /**
+     * 获取 SharedPreferences
+     */
+    private fun getSharedPreferences(context: Context): SharedPreferences {
+        return context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
     }
     
     // 获取当前颜色方案

@@ -1,8 +1,12 @@
 package com.example.seeding.di
 
+import com.example.seeding.data.repository.ActionRepositoryImpl
+import com.example.seeding.data.repository.CommitmentRepositoryImpl
 import com.example.seeding.data.repository.GoalRepositoryImpl
 import com.example.seeding.data.repository.SeedRepositoryImpl
 import com.example.seeding.data.repository.UserRepositoryImpl
+import com.example.seeding.domain.repository.ActionRepository
+import com.example.seeding.domain.repository.CommitmentRepository
 import com.example.seeding.domain.repository.GoalRepository
 import com.example.seeding.domain.repository.SeedRepository
 import com.example.seeding.domain.repository.UserRepository
@@ -25,9 +29,17 @@ abstract class RepositoryModule {
     
     @Binds
     @Singleton
+    abstract fun bindSeedRepository(impl: SeedRepositoryImpl): SeedRepository
+    
+    @Binds
+    @Singleton
     abstract fun bindGoalRepository(impl: GoalRepositoryImpl): GoalRepository
     
     @Binds
     @Singleton
-    abstract fun bindSeedRepository(impl: SeedRepositoryImpl): SeedRepository
+    abstract fun bindActionRepository(impl: ActionRepositoryImpl): ActionRepository
+    
+    @Binds
+    @Singleton
+    abstract fun bindCommitmentRepository(impl: CommitmentRepositoryImpl): CommitmentRepository
 } 

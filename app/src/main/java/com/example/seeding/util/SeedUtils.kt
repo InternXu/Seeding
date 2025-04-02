@@ -3,6 +3,10 @@ package com.example.seeding.util
 import androidx.compose.ui.graphics.Color
 import com.example.seeding.R
 import com.example.seeding.data.model.Seed
+import android.content.Context
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 
 /**
  * 种子工具类
@@ -86,7 +90,13 @@ object SeedUtils {
         }
     }
     
-    // 获取种子全称
+    // 获取种子全称 - 非Composable环境使用
+    fun getSeedFullName(seedId: Int, context: Context): String {
+        val resId = getSeedFullNameResId(seedId)
+        return context.getString(resId)
+    }
+    
+    // 获取种子全称 - 兼容旧代码，但不推荐使用
     fun getSeedFullName(seedId: Int): String {
         return when (seedId) {
             SEED_LIFE -> "保护生命"
@@ -103,6 +113,12 @@ object SeedUtils {
             SEED_SURPRISE -> "提前和惊喜"
             else -> ""
         }
+    }
+    
+    // 获取种子全称 - Composable环境使用
+    @Composable
+    fun getSeedFullNameComposable(seedId: Int): String {
+        return stringResource(getSeedFullNameResId(seedId))
     }
 
     // 获取种子颜色
